@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SoFurry Favs LiveWallpaper</string>
+    <string name="settings_title">SoFurry LiveWallpaper settings</string>
+    <string name="description">Your SoFurry favorites as rotating wallpaper!</string>
+    <string name="preference_rotatetime_title">Change Interval</string>
+    <string name="preference_rotatetime_summary">Time interval of wallpaper changes</string>
+    <string name="preference_contentlevel_title">Content Level</string>
+    <string name="preference_contentlevel_summary">Select age rating of displayed content</string>
+    <string name="preference_username_title">Username</string>
+    <string name="preference_username_summary">Your SoFurry username</string>
+    <string name="preference_password_title">Password</string>
+    <string name="preference_password_summary">Your SoFurry password</string>
+</resources>
