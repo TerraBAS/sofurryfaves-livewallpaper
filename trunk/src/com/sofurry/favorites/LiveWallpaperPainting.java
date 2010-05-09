@@ -23,6 +23,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -105,6 +106,18 @@ public class LiveWallpaperPainting extends Thread {
 		Canvas c = null;
 		while (run) {
 			try {
+				c = this.surfaceHolder.lockCanvas(null);
+				synchronized (this.surfaceHolder) {
+					Log.d("run", "Rendering loading text...");
+					Paint paint = new Paint();
+					paint.setColor(Color.YELLOW);
+					paint.setStyle(Paint.Style.FILL);
+					paint.setAntiAlias(true);
+					paint.setTextSize(20);
+					c.drawText("Loading...", 20, 60, paint);
+				}
+				this.surfaceHolder.unlockCanvasAndPost(c);
+
 				c = this.surfaceHolder.lockCanvas(null);
 				synchronized (this.surfaceHolder) {
 					Log.d("run", "Drawing...");
