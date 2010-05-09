@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <string-array name="rotatetime_names">
+        <item>5 Minutes</item>
+        <item>10 Minutes</item>
+        <item>30 Minutes</item>
+        <item>1 hour</item>
+        <item>3 hours</item>
+        <item>6 hours</item>
+        <item>12 hours</item>
+        <item>24 hours</item>
+    </string-array>
+
+    <string-array name="rotatetime_values">
+        <item>300</item>
+        <item>600</item>
+        <item>1800</item>
+        <item>3600</item>
+        <item>10800</item>
+        <item>21600</item>
+        <item>43200</item>
+        <item>86400</item>
+    </string-array>
+
+</resources>
+
