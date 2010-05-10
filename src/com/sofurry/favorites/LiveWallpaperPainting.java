@@ -48,7 +48,8 @@ public class LiveWallpaperPainting extends Thread {
 	private String username = "";
 	private String password = "";
 	private long lastTouchTime;
-	private long doubleTouchThreshold = 400;
+	private long lastLastTouchTime;
+	private long doubleTouchThreshold = 300;
 
 	/** Time tracking */
 	private long previousTime;
@@ -68,6 +69,7 @@ public class LiveWallpaperPainting extends Thread {
 		this.password = password;
 		this.rotateInterval = rotateInterval;
 		this.lastTouchTime = 0;
+		this.lastLastTouchTime = 0;
 	}
 
 	/**
@@ -167,10 +169,12 @@ public class LiveWallpaperPainting extends Thread {
 			long currentTime = System.currentTimeMillis();
 			if (currentTime - lastTouchTime > 60) {
 				Log.d("doubletouch", "Currenttime: "+currentTime+" lastTouch: "+lastTouchTime);
-				if (currentTime - lastTouchTime < doubleTouchThreshold) {
+				if (currentTime - lastTouchTime < doubleTouchThreshold &&
+					currentTime - lastLastTouchTime < doubleTouchThreshold) {
 					previousTime = 0;
 					notify();
 				}
+				lastLastTouchTime = lastTouchTime;
 			}
 			lastTouchTime = System.currentTimeMillis();
 		}
