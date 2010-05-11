@@ -60,6 +60,7 @@ public class LiveWallpaperPainting extends Thread {
 	private float xoffset, yoffset;
 	private float xoffsetold, yoffsetold;
 	private String pageUrl = null;
+	private String errorMessage = null;
 
 	/** Time tracking */
 	private long previousTime;
@@ -151,7 +152,7 @@ public class LiveWallpaperPainting extends Thread {
 					c.drawText("Loading next image...", 20, 70, paint);
 				}
 				this.surfaceHolder.unlockCanvasAndPost(c);
-
+				errorMessage = null;
 				// Check if there's a new image
 				updateImage();
 
@@ -163,6 +164,15 @@ public class LiveWallpaperPainting extends Thread {
 				synchronized (this.surfaceHolder) {
 					Log.d("run", "Drawing...");
 					repaintImage(c);
+					if (errorMessage != null) {
+						Paint paint = new Paint();
+						paint.setColor(Color.RED);
+						paint.setAntiAlias(true);
+						paint.setTextSize(35);
+						c.drawText(errorMessage, 22, 212, paint);
+						paint.setColor(Color.YELLOW);
+						c.drawText(errorMessage, 20, 210, paint);
+					}
 					oldImage = null;
 				}
 			} finally {
@@ -342,7 +352,7 @@ public class LiveWallpaperPainting extends Thread {
 		boolean useAuthentication = false;
 		String viewSource = "8"; // Show featured works if not authenticated
 
-		if (username != null && username != "") {
+		if (username != null && username.trim().length() > 0) {
 			useAuthentication = true;
 			Authentication.updateAuthenticationInformation(username, password);
 			viewSource = "1";
@@ -404,6 +414,7 @@ public class LiveWallpaperPainting extends Thread {
 			Log.e("getNewImageUrl", "Exception: ", e);
 		} catch (JSONException e) {
 			Log.e("getNewImageUrl", "Exception: ", e);
+			errorMessage = "User/Password wrong!";
 		}
 
 		return null;
