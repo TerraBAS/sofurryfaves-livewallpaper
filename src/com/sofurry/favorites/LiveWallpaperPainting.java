@@ -174,7 +174,7 @@ public class LiveWallpaperPainting extends Thread {
 			synchronized (this) {
 				if (wait) {
 					try {
-						wait();
+						wait(1000 * rotateInterval);
 					} catch (Exception e) {
 					}
 				}
