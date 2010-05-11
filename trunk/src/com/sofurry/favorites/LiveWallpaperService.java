@@ -2,6 +2,7 @@ package com.sofurry.favorites;
 
 import android.content.SharedPreferences;
 import android.service.wallpaper.WallpaperService;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
@@ -26,16 +27,19 @@ public class LiveWallpaperService extends WallpaperService {
 
 	@Override
 	public Engine onCreateEngine() {
+		Log.d("LW Service", "onCreateEngine");
 		return new SampleEngine();
 	}
 
 	@Override
 	public void onCreate() {
+		Log.d("LW Service", "onCreate");
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
+		Log.d("LW Service", "onDestroy");
 		super.onDestroy();
 	}
 
@@ -64,12 +68,14 @@ public class LiveWallpaperService extends WallpaperService {
 
 		@Override
 		public void onCreate(SurfaceHolder surfaceHolder) {
+			Log.d("SoFurryLW", "onCreate");
 			super.onCreate(surfaceHolder);
 			setTouchEventsEnabled(true);
 		}
 
 		@Override
 		public void onDestroy() {
+			Log.d("SoFurryLW", "onDestroy");
 			super.onDestroy();
 			// remove listeners and callbacks here
 			painting.stopPainting();
@@ -77,6 +83,7 @@ public class LiveWallpaperService extends WallpaperService {
 
 		@Override
 		public void onVisibilityChanged(boolean visible) {
+			Log.d("LW Service", "onVisibilityChanged "+visible);
 			if (visible) {
 				painting.resumePainting();
 			} else {
@@ -87,18 +94,21 @@ public class LiveWallpaperService extends WallpaperService {
 
 		@Override
 		public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+			Log.d("LW Service", "onSurfaceChanged");
 			super.onSurfaceChanged(holder, format, width, height);
 			painting.setSurfaceSize(width, height);
 		}
 
 		@Override
 		public void onSurfaceCreated(SurfaceHolder holder) {
+			Log.d("LW Service", "onSurfaceCreated");
 			super.onSurfaceCreated(holder);
 			painting.start();
 		}
 
 		@Override
 		public void onSurfaceDestroyed(SurfaceHolder holder) {
+			Log.d("LW Service", "onSurfaceDestroy");
 			super.onSurfaceDestroyed(holder);
 			boolean retry = true;
 			painting.stopPainting();
@@ -113,6 +123,7 @@ public class LiveWallpaperService extends WallpaperService {
 		@Override
 		public void onOffsetsChanged(float xOffset, float yOffset, 
 				float xStep, float yStep, int xPixels, int yPixels) {
+			Log.d("LW Service", "onOffsetsChanged");
 		}
 
 		@Override

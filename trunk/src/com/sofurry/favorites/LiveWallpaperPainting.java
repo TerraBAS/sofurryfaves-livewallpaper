@@ -87,6 +87,7 @@ public class LiveWallpaperPainting extends Thread {
 	 * Pauses the livewallpaper animation
 	 */
 	public void pausePainting() {
+		Log.d("LW", "pausePainting");
 		this.wait = true;
 		synchronized (this) {
 			this.notify();
@@ -97,6 +98,7 @@ public class LiveWallpaperPainting extends Thread {
 	 * Resume the livewallpaper animation
 	 */
 	public void resumePainting() {
+		Log.d("LW", "resumePainting");
 		this.wait = false;
 		synchronized (this) {
 			this.notify();
@@ -107,6 +109,7 @@ public class LiveWallpaperPainting extends Thread {
 	 * Stop the livewallpaper animation
 	 */
 	public void stopPainting() {
+		Log.d("LW", "stopPainting");
 		this.run = false;
 		synchronized (this) {
 			this.notify();
@@ -119,9 +122,10 @@ public class LiveWallpaperPainting extends Thread {
 		Canvas c = null;
 		while (run) {
 			try {
+				Log.d("run", "locking canvas 1");
 				c = this.surfaceHolder.lockCanvas(null);
 				synchronized (this.surfaceHolder) {
-					
+
 					if (currentImage == null) {
 						currentImage = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
 						Canvas ci = new Canvas();
@@ -132,14 +136,13 @@ public class LiveWallpaperPainting extends Thread {
 						paint.setColor(Color.YELLOW);
 						paint.setAntiAlias(true);
 						paint.setTextSize(20);
-						ci.drawRect(new Rect(0,0,width,200), paint);
+						ci.drawRect(new Rect(0, 0, width, 200), paint);
 						ci.drawText("Tap 3 times to", 50, 110, paint);
 						ci.drawText("open in Browser", 50, 135, paint);
 						ci.drawText("Tap 3 times to", 50, height / 2, paint);
 						ci.drawText("load new image", 50, height / 2 + 25, paint);
 					}
-					
-					
+
 					repaintImage(c);
 					Log.d("run", "Rendering loading text...");
 					Paint paint = new Paint();
@@ -150,22 +153,25 @@ public class LiveWallpaperPainting extends Thread {
 					c.drawText("Loading next image...", 22, 72, paint);
 					paint.setColor(Color.YELLOW);
 					c.drawText("Loading next image...", 20, 70, paint);
-				}
-				this.surfaceHolder.unlockCanvasAndPost(c);
-				errorMessage = null;
-				// Check if there's a new image
-				updateImage();
 
-				if (oldImage != null) {
-					transitionImage();
-				}
+					this.surfaceHolder.unlockCanvasAndPost(c);
+					errorMessage = null;
+					// Check if there's a new image
+					if (this.run)
+						updateImage();
 
-				c = this.surfaceHolder.lockCanvas(null);
-				synchronized (this.surfaceHolder) {
+					if (oldImage != null && this.run) {
+						transitionImage();
+					}
+
+					Log.d("run", "locking canvas 2");
+					c = this.surfaceHolder.lockCanvas(null);
 					Log.d("run", "Drawing...");
-					repaintImage(c);
+					if (this.run)
+						repaintImage(c);
+					
 					if (errorMessage != null) {
-						Paint paint = new Paint();
+						paint = new Paint();
 						paint.setColor(Color.RED);
 						paint.setAntiAlias(true);
 						paint.setTextSize(35);
@@ -180,16 +186,21 @@ public class LiveWallpaperPainting extends Thread {
 					this.surfaceHolder.unlockCanvasAndPost(c);
 				}
 			}
+			Log.d("run", "before final synchronized");
 			// pause if no need to animate
 			synchronized (this) {
-				if (wait) {
+				if (wait && this.run) {
+					Log.d("run", "waiting...");
 					try {
 						wait(1000 * rotateInterval);
 					} catch (Exception e) {
+						e.printStackTrace();
 					}
+					Log.d("run", "waking up after wait");
 				}
 			}
 		}
+		Log.d("run", "EXITING RUN");
 	}
 
 	private void transitionImage() {
@@ -197,6 +208,8 @@ public class LiveWallpaperPainting extends Thread {
 		int maxAnimationSteps = 100;
 		Log.d("transition", "Doing transition");
 		for (int pos = 0; pos < maxAnimationSteps; pos++) {
+			if (!this.run)
+				return;
 			// Do a smooth transition
 			int transitionX = (int) ((Math.sin(Math.PI * ((float) pos / (float) maxAnimationSteps) - (Math.PI / 2.0)) + 1) / 2 * (float) width);
 			c = this.surfaceHolder.lockCanvas(null);
@@ -217,10 +230,19 @@ public class LiveWallpaperPainting extends Thread {
 	 * @param height
 	 */
 	public void setSurfaceSize(int width, int height) {
-		this.width = width;
-		this.height = height;
-		synchronized (this) {
+		Log.d("SoFurryLW", "SetSurfaceSize: " + width + "/" + height);
+		synchronized (this.surfaceHolder) {
+			this.width = width;
+			this.height = height;
+			xoffset = 0;
+			xoffsetold = 0;
+			yoffset = 0;
+			yoffsetold = 0;
 			previousTime = 0;
+		}
+		synchronized (this) {
+			Log.d("SetSurfaceSize", "disabling run before notify");
+			this.run = false;
 			notify();
 		}
 	}
@@ -319,9 +341,10 @@ public class LiveWallpaperPainting extends Thread {
 
 	private void repaintImage(Canvas canvas) {
 		if (currentImage != null) {
-			Log.d("doDraw", "drawing on canvas");
+			Log.d("repaintImage", "drawing on canvas");
 			canvas.drawColor(Color.BLACK);
 			canvas.drawBitmap(currentImage, xoffset, yoffset, null);
+			Log.d("repaintImage", "drawing done");
 		}
 	}
 
