@@ -22,6 +22,8 @@ public class LiveWallpaperService extends WallpaperService {
 	public static final String PREFERENCES = "com.sofurry.favorites.livewallpaper";
 	public static final String PREFERENCE_ROTATETIME = "preference_rotatetime";
 	public static final String PREFERENCE_CONTENTLEVEL = "preference_contentlevel";
+	public static final String PREFERENCE_CONTENTSOURCE = "preference_contentsource";
+	public static final String PREFERENCE_SEARCH = "preference_search";
 	public static final String PREFERENCE_USERNAME = "preference_username";
 	public static final String PREFERENCE_PASSWORD = "preference_password";
 
@@ -55,6 +57,8 @@ public class LiveWallpaperService extends WallpaperService {
 			painting = new LiveWallpaperPainting(holder, getApplicationContext(), 
 					Integer.parseInt(prefs.getString(PREFERENCE_ROTATETIME, "1800")),
 					Integer.parseInt(prefs.getString(PREFERENCE_CONTENTLEVEL, "0")),
+					Integer.parseInt(prefs.getString(PREFERENCE_CONTENTSOURCE, "1")),
+					prefs.getString(PREFERENCE_SEARCH, ""),
 					prefs.getString(PREFERENCE_USERNAME, ""),
 					prefs.getString(PREFERENCE_PASSWORD, ""));
 		}
@@ -62,6 +66,8 @@ public class LiveWallpaperService extends WallpaperService {
 		public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
 			painting.setRotateInterval(Integer.parseInt(prefs.getString(PREFERENCE_ROTATETIME, "1800")));
 			painting.setContentLevel(Integer.parseInt(prefs.getString(PREFERENCE_CONTENTLEVEL, "0")));
+			painting.setContentSource(Integer.parseInt(prefs.getString(PREFERENCE_CONTENTSOURCE, "1")));
+			painting.setSearch(prefs.getString(PREFERENCE_SEARCH, ""));
 			painting.setUsername(prefs.getString(PREFERENCE_USERNAME, ""));
 			painting.setPassword(prefs.getString(PREFERENCE_PASSWORD, ""));
 		}

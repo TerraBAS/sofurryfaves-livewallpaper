@@ -33,4 +33,19 @@
             android:entries="@array/contentlevel_names"
             android:entryValues="@array/contentlevel_values" />
 
+    <ListPreference
+            android:key="preference_contentsource"
+            android:title="@string/preference_contentsource_title"
+            android:summary="@string/preference_contentsource_summary"
+            android:entries="@array/contentsource_names"
+            android:entryValues="@array/contentsource_values" />
+
+                <EditTextPreference
+                        android:key="preference_search"
+                        android:summary="@string/preference_search_summary"
+                        android:title="@string/preference_search_title"
+                        android:dialogTitle="@string/preference_search_title"
+                        android:singleLine="true">
+                        </EditTextPreference>
+
 </PreferenceScreen>
