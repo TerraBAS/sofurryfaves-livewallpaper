@@ -50,6 +50,8 @@ public class LiveWallpaperPainting extends Thread {
 	private int totalFavoritePages;
 	private int rotateInterval = 1800;
 	private int contentLevel = 0;
+	private int contentSource = 1;
+	private String search = "";
 	private String username = "";
 	private String password = "";
 	private long lastTouchTime;
@@ -66,7 +68,7 @@ public class LiveWallpaperPainting extends Thread {
 	private long previousTime;
 
 	public LiveWallpaperPainting(SurfaceHolder surfaceHolder, Context context, int rotateInterval, int contentlevel,
-			String username, String password) {
+			int contentsource, String search, String username, String password) {
 		// keep a reference of the context and the surface
 		// the context is needed is you want to inflate
 		// some resources from your livewallpaper .apk
@@ -76,6 +78,8 @@ public class LiveWallpaperPainting extends Thread {
 		this.wait = true;
 		this.totalFavoritePages = 1;
 		this.contentLevel = contentlevel;
+		this.contentSource = contentsource;
+		this.search = search;
 		this.username = username;
 		this.password = password;
 		this.rotateInterval = rotateInterval;
@@ -373,12 +377,16 @@ public class LiveWallpaperPainting extends Thread {
 	private String getNewImageUrl() {
 		Random random = new Random();
 		boolean useAuthentication = false;
-		String viewSource = "8"; // Show featured works if not authenticated
+		String viewSource = ""+contentSource;
+		
 
 		if (username != null && username.trim().length() > 0) {
 			useAuthentication = true;
 			Authentication.updateAuthenticationInformation(username, password);
-			viewSource = "1";
+		} else if (viewSource.equals("5") && (search == null || search.trim().length()<=0)) {
+			viewSource = "8"; // Show featured works if no search term entered
+		} else if (!viewSource.equals("0") && !viewSource.equals("5") ){
+			viewSource = "8"; // Show featured works if not authenticated
 		}
 		String requestUrl = "http://sofurry.com/ajaxfetch.php";
 		Map<String, String> requestParameters = new HashMap<String, String>();
@@ -387,6 +395,8 @@ public class LiveWallpaperPainting extends Thread {
 		requestParameters.put("contentType", "1");
 		requestParameters.put("page", "" + page);
 		requestParameters.put("sort", "0");
+		if (search != null && search.trim().length() > 0)
+			requestParameters.put("search", search);
 		requestParameters.put("tab", "favourites");
 		requestParameters.put("contentLevel", "" + contentLevel);
 		requestParameters.put("viewSource", viewSource);
@@ -493,6 +503,22 @@ public class LiveWallpaperPainting extends Thread {
 
 	public void setRotateInterval(int rotateInterval) {
 		this.rotateInterval = rotateInterval;
+	}
+
+	public int getContentSource() {
+		return contentSource;
+	}
+
+	public void setContentSource(int contentSource) {
+		this.contentSource = contentSource;
+	}
+
+	public String getSearch() {
+		return search;
+	}
+
+	public void setSearch(String search) {
+		this.search = search;
 	}
 
 }

@@ -7,6 +7,10 @@
     <string name="preference_rotatetime_summary">Time interval of wallpaper changes</string>
     <string name="preference_contentlevel_title">Content Level</string>
     <string name="preference_contentlevel_summary">Select age rating of displayed content</string>
+    <string name="preference_contentsource_title">Content Source</string>
+    <string name="preference_contentsource_summary">Select which content you want to see</string>
+    <string name="preference_search_title">Search</string>
+    <string name="preference_search_summary">Optional search term for art</string>
     <string name="preference_username_title">Username</string>
     <string name="preference_username_summary">Your SoFurry username</string>
     <string name="preference_password_title">Password</string>
