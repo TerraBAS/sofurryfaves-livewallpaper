@@ -49,6 +49,7 @@ public class LiveWallpaperService extends WallpaperService {
 
 		private LiveWallpaperPainting painting;
 		private SharedPreferences prefs;
+		private SurfaceHolder holder = null;
 		
 		SampleEngine() {
 			SurfaceHolder holder = getSurfaceHolder();
@@ -75,6 +76,7 @@ public class LiveWallpaperService extends WallpaperService {
 		@Override
 		public void onCreate(SurfaceHolder surfaceHolder) {
 			Log.d("SoFurryLW", "onCreate");
+			this.holder = surfaceHolder;
 			super.onCreate(surfaceHolder);
 			setTouchEventsEnabled(true);
 		}
@@ -90,17 +92,31 @@ public class LiveWallpaperService extends WallpaperService {
 		@Override
 		public void onVisibilityChanged(boolean visible) {
 			Log.d("LW Service", "onVisibilityChanged "+visible);
-			if (visible) {
-				painting.resumePainting();
+			if (painting.isAlive()) {
+				if (visible) {
+					painting.resumePainting();
+				} else {
+				// 	remove listeners and callbacks here
+					painting.pausePainting();
+				}
 			} else {
-				// remove listeners and callbacks here
-				painting.pausePainting();
+				int totalPages = painting.getTotalFavoritePages();
+				painting = new LiveWallpaperPainting(holder, getApplicationContext(), 
+						Integer.parseInt(prefs.getString(PREFERENCE_ROTATETIME, "1800")),
+						Integer.parseInt(prefs.getString(PREFERENCE_CONTENTLEVEL, "0")),
+						Integer.parseInt(prefs.getString(PREFERENCE_CONTENTSOURCE, "1")),
+						prefs.getString(PREFERENCE_SEARCH, ""),
+						prefs.getString(PREFERENCE_USERNAME, ""),
+						prefs.getString(PREFERENCE_PASSWORD, ""));
+				painting.setTotalFavoritePages(totalPages);
+				painting.start();
 			}
 		}
 
 		@Override
 		public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 			Log.d("LW Service", "onSurfaceChanged");
+			this.holder = holder;
 			super.onSurfaceChanged(holder, format, width, height);
 			painting.setSurfaceSize(width, height);
 		}
@@ -108,6 +124,7 @@ public class LiveWallpaperService extends WallpaperService {
 		@Override
 		public void onSurfaceCreated(SurfaceHolder holder) {
 			Log.d("LW Service", "onSurfaceCreated");
+			this.holder = holder;
 			super.onSurfaceCreated(holder);
 			painting.start();
 		}
@@ -116,6 +133,7 @@ public class LiveWallpaperService extends WallpaperService {
 		public void onSurfaceDestroyed(SurfaceHolder holder) {
 			Log.d("LW Service", "onSurfaceDestroy");
 			super.onSurfaceDestroyed(holder);
+			this.holder = holder;
 			boolean retry = true;
 			painting.stopPainting();
 			while (retry) {
