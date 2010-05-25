@@ -262,7 +262,7 @@ public class LiveWallpaperPainting extends Thread {
 		synchronized (this) {
 			long currentTime = System.currentTimeMillis();
 			if (currentTime - lastTouchTime > 60) {
-				Log.d("doubletouch", "Currenttime: " + currentTime + " lastTouch: " + lastTouchTime);
+				Log.d("doubletouch", "Currenttime: " + currentTime + " lastTouch: " + lastTouchTime + " run: " + run + " wait: " + wait);
 				if (currentTime - lastTouchTime < doubleTouchThreshold
 						&& currentTime - lastLastTouchTime < doubleTouchThreshold) {
 					if (event.getY() < 200 && pageUrl != null) {
@@ -520,5 +520,14 @@ public class LiveWallpaperPainting extends Thread {
 	public void setSearch(String search) {
 		this.search = search;
 	}
+
+	public int getTotalFavoritePages() {
+		return totalFavoritePages;
+	}
+
+	public void setTotalFavoritePages(int totalFavoritePages) {
+		this.totalFavoritePages = totalFavoritePages;
+	}
+
 
 }
