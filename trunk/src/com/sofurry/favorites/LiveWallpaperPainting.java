@@ -388,7 +388,7 @@ public class LiveWallpaperPainting extends Thread {
 		} else if (!viewSource.equals("0") && !viewSource.equals("5") ){
 			viewSource = "8"; // Show featured works if not authenticated
 		}
-		String requestUrl = "http://sofurry.com/ajaxfetch.php";
+		String requestUrl = "http://www.sofurry.com/ajaxfetch.php";
 		Map<String, String> requestParameters = new HashMap<String, String>();
 		int page = random.nextInt(totalFavoritePages);
 		requestParameters.put("f", "browse");
@@ -435,8 +435,8 @@ public class LiveWallpaperPainting extends Thread {
 					return null;
 				int i = random.nextInt(numResults);
 				JSONObject jsonItem = items.getJSONObject(i);
-				String thumb = "http://sofurry.com" + jsonItem.getString("thumb");
-				pageUrl = "http://sofurry.com/page/" + jsonItem.getString("pid");
+				String thumb = "http://www.sofurry.com" + jsonItem.getString("thumb");
+				pageUrl = "http://www.sofurry.com/page/" + jsonItem.getString("pid");
 				String preview = thumb.replace("/thumbnails/", "/preview/");
 				return preview;
 			}
