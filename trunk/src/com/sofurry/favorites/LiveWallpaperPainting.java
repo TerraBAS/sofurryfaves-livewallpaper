@@ -57,12 +57,15 @@ public class LiveWallpaperPainting extends Thread {
 	private long lastTouchTime;
 	private long lastLastTouchTime;
 	private long doubleTouchThreshold = 300;
+	private Bitmap currentImageBig = null;
 	private Bitmap currentImage = null;
 	private Bitmap oldImage = null;
 	private float xoffset, yoffset;
 	private float xoffsetold, yoffsetold;
 	private String pageUrl = null;
 	private String errorMessage = null;
+	private boolean skipTransition = false;
+	private final String sfapp = "SoFurry LiveWallpaper";
 
 	/** Time tracking */
 	private long previousTime;
@@ -85,13 +88,14 @@ public class LiveWallpaperPainting extends Thread {
 		this.rotateInterval = rotateInterval;
 		this.lastTouchTime = 0;
 		this.lastLastTouchTime = 0;
+		Log.i(sfapp, "LiveWallpaperPainting constructor called");
 	}
 
 	/**
 	 * Pauses the livewallpaper animation
 	 */
 	public void pausePainting() {
-		Log.d("LW", "pausePainting");
+		Log.d(sfapp, "pausePainting");
 		this.wait = true;
 		synchronized (this) {
 			this.notify();
@@ -102,7 +106,7 @@ public class LiveWallpaperPainting extends Thread {
 	 * Resume the livewallpaper animation
 	 */
 	public void resumePainting() {
-		Log.d("LW", "resumePainting");
+		Log.d(sfapp, "resumePainting");
 		this.wait = false;
 		synchronized (this) {
 			this.notify();
@@ -113,7 +117,7 @@ public class LiveWallpaperPainting extends Thread {
 	 * Stop the livewallpaper animation
 	 */
 	public void stopPainting() {
-		Log.d("LW", "stopPainting");
+		Log.d(sfapp, "stopPainting");
 		this.run = false;
 		synchronized (this) {
 			this.notify();
@@ -126,12 +130,25 @@ public class LiveWallpaperPainting extends Thread {
 		Canvas c = null;
 		while (run) {
 			try {
-				Log.d("run", "locking canvas 1");
+//				while (width == 0 || height == 0) {
+//					try {
+//						Thread.sleep(100);
+//					} catch (InterruptedException e) {
+//						Log.i(sfapp, "Sleep interrupted", e);
+//					}
+//				}
+				
+				Log.d(sfapp, "locking canvas 1");
 				c = this.surfaceHolder.lockCanvas(null);
+				Log.i(sfapp, "Width:"+width+" Height:"+height+" CWidth:"+c.getWidth()+ " CHeight:"+c.getHeight());
+				if (width == 0)
+					width = c.getWidth();
+				if (height == 0)
+					height = c.getWidth();
 				synchronized (this.surfaceHolder) {
 
 					if (currentImage == null) {
-						currentImage = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+						currentImage = Bitmap.createBitmap(c.getWidth(), c.getHeight(), Bitmap.Config.RGB_565);
 						Canvas ci = new Canvas();
 						ci.setBitmap(currentImage);
 
@@ -143,12 +160,12 @@ public class LiveWallpaperPainting extends Thread {
 						ci.drawRect(new Rect(0, 0, width, 200), paint);
 						ci.drawText("Tap 3 times to", 50, 110, paint);
 						ci.drawText("open in Browser", 50, 135, paint);
-						ci.drawText("Tap 3 times to", 50, height / 2, paint);
-						ci.drawText("load new image", 50, height / 2 + 25, paint);
+						ci.drawText("Tap 3 times to", 50, c.getHeight() / 2, paint);
+						ci.drawText("load new image", 50, c.getHeight() / 2 + 25, paint);
 					}
 
 					repaintImage(c);
-					Log.d("run", "Rendering loading text...");
+					Log.d(sfapp, "Rendering loading text...");
 					Paint paint = new Paint();
 					paint.setColor(Color.BLACK);
 					paint.setStyle(Paint.Style.FILL);
@@ -164,13 +181,14 @@ public class LiveWallpaperPainting extends Thread {
 					if (this.run)
 						updateImage();
 
-					if (oldImage != null && this.run) {
+					if (oldImage != null && this.run && !skipTransition) {
 						transitionImage();
 					}
+					skipTransition = false;
 
-					Log.d("run", "locking canvas 2");
+					Log.d(sfapp, "locking canvas 2");
 					c = this.surfaceHolder.lockCanvas(null);
-					Log.d("run", "Drawing...");
+					Log.d(sfapp, "Drawing...");
 					if (this.run)
 						repaintImage(c);
 					
@@ -186,31 +204,35 @@ public class LiveWallpaperPainting extends Thread {
 					oldImage = null;
 				}
 			} finally {
-				if (c != null) {
-					this.surfaceHolder.unlockCanvasAndPost(c);
+				try {
+					if (c != null) {
+						this.surfaceHolder.unlockCanvasAndPost(c);
+					}
+				} catch (Exception e2) {
+					Log.e(sfapp, "Exception on unlockCanvasAndPost", e2);
 				}
 			}
 			Log.d("run", "before final synchronized");
 			// pause if no need to animate
 			synchronized (this) {
 				if (wait && this.run) {
-					Log.d("run", "waiting...");
+					Log.d(sfapp, "waiting...");
 					try {
 						wait(1000 * rotateInterval);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-					Log.d("run", "waking up after wait");
+					Log.d(sfapp, "waking up after wait");
 				}
 			}
 		}
-		Log.d("run", "EXITING RUN");
+		Log.d(sfapp, "EXITING RUN");
 	}
 
 	private void transitionImage() {
 		Canvas c = null;
 		int maxAnimationSteps = 100;
-		Log.d("transition", "Doing transition");
+		Log.d(sfapp, "Doing transition");
 		for (int pos = 0; pos < maxAnimationSteps; pos++) {
 			if (!this.run)
 				return;
@@ -234,7 +256,7 @@ public class LiveWallpaperPainting extends Thread {
 	 * @param height
 	 */
 	public void setSurfaceSize(int width, int height) {
-		Log.d("SoFurryLW", "SetSurfaceSize: " + width + "/" + height);
+		Log.d(sfapp, "SetSurfaceSize: " + width + "/" + height);
 		synchronized (this.surfaceHolder) {
 			this.width = width;
 			this.height = height;
@@ -242,11 +264,11 @@ public class LiveWallpaperPainting extends Thread {
 			xoffsetold = 0;
 			yoffset = 0;
 			yoffsetold = 0;
-			previousTime = 0;
+			skipTransition = true;
 		}
 		synchronized (this) {
-			Log.d("SetSurfaceSize", "disabling run before notify");
-			this.run = false;
+			if (currentImageBig != null)
+				currentImage = rescaleImage(currentImageBig);
 			notify();
 		}
 	}
@@ -262,7 +284,7 @@ public class LiveWallpaperPainting extends Thread {
 		synchronized (this) {
 			long currentTime = System.currentTimeMillis();
 			if (currentTime - lastTouchTime > 60) {
-				Log.d("doubletouch", "Currenttime: " + currentTime + " lastTouch: " + lastTouchTime + " run: " + run + " wait: " + wait);
+				Log.d(sfapp, "Currenttime: " + currentTime + " lastTouch: " + lastTouchTime + " run: " + run + " wait: " + wait);
 				if (currentTime - lastTouchTime < doubleTouchThreshold
 						&& currentTime - lastLastTouchTime < doubleTouchThreshold) {
 					if (event.getY() < 200 && pageUrl != null) {
@@ -274,6 +296,7 @@ public class LiveWallpaperPainting extends Thread {
 							e.printStackTrace();
 						}
 					} else {
+						Log.e(sfapp, "Resetting previousTime!");
 						previousTime = 0;
 						notify();
 					}
@@ -290,52 +313,20 @@ public class LiveWallpaperPainting extends Thread {
 	private void updateImage() {
 		long currentTime = System.currentTimeMillis();
 		long elapsed = currentTime - previousTime;
+		Log.d(sfapp, "updateImage: currentTime="+currentTime+" previousTime="+previousTime);
 		if (elapsed > 1000 * rotateInterval) {
 			wait = false;
-			Log.d("doDraw", "fetching image URL");
+			Log.d(sfapp, "fetching image URL");
+			previousTime = currentTime;
 			imageUrl = getNewImageUrl();
 			if (imageUrl != null) {
-				Log.d("doDraw", "Image: " + imageUrl);
-				Log.d("doDraw", "creating drawable image");
+				Log.d(sfapp, "Image: " + imageUrl);
+				Log.d(sfapp, "creating drawable image");
 				Bitmap image = fetchBitmap(imageUrl);
 
 				if (image != null) {
-					int imageWidth = image.getWidth();
-					int imageHeight = image.getHeight();
-
-					double imageAspect = (double) imageWidth / imageHeight;
-					double canvasAspect = (double) width / height;
-					double scaleFactor;
-
-					if (imageAspect < canvasAspect) {
-						scaleFactor = (double) height / imageHeight;
-					} else {
-						scaleFactor = (double) width / imageWidth;
-					}
-
-					float scaleWidth = ((float) scaleFactor) * imageWidth;
-					float scaleHeight = ((float) scaleFactor) * imageHeight;
-					Log.d("doDraw", "canvas size: " + width + "/" + height);
-					Log.d("doDraw", "canvas aspect: " + canvasAspect);
-					Log.d("doDraw", "image dimensions: " + imageWidth + "/" + imageHeight);
-					Log.d("doDraw", "image aspect: " + imageAspect);
-					Log.d("doDraw", "scaleFactor: " + scaleFactor);
-					Log.d("doDraw", "Scaled dimensions: " + scaleWidth + "/" + scaleHeight);
-
-					xoffsetold = xoffset;
-					yoffsetold = yoffset;
-					oldImage = currentImage;
-
-					xoffset = (float) ((width - scaleWidth) / 2.0);
-					yoffset = (float) ((height - scaleHeight) / 2.0);
-
-					// create a matrix for the manipulation
-					Matrix matrix = new Matrix();
-					// resize the bit map
-					matrix.postScale(scaleWidth, scaleHeight);
-
-					// recreate the new Bitmap
-					currentImage = Bitmap.createScaledBitmap(image, (int) scaleWidth, (int) scaleHeight, true);
+					currentImageBig = image;
+					currentImage = rescaleImage(currentImageBig);
 				}
 			}
 			previousTime = currentTime;
@@ -343,25 +334,64 @@ public class LiveWallpaperPainting extends Thread {
 		wait = true;
 	}
 
+	private Bitmap rescaleImage(Bitmap image) {
+		int imageWidth = currentImageBig.getWidth();
+		int imageHeight = currentImageBig.getHeight();
+
+		double imageAspect = (double) imageWidth / imageHeight;
+		double canvasAspect = (double) width / height;
+		double scaleFactor;
+
+		if (imageAspect < canvasAspect) {
+			scaleFactor = (double) height / imageHeight;
+		} else {
+			scaleFactor = (double) width / imageWidth;
+		}
+
+		float scaleWidth = ((float) scaleFactor) * imageWidth;
+		float scaleHeight = ((float) scaleFactor) * imageHeight;
+		Log.d(sfapp, "canvas size: " + width + "/" + height);
+		Log.d(sfapp, "canvas aspect: " + canvasAspect);
+		Log.d(sfapp, "image dimensions: " + imageWidth + "/" + imageHeight);
+		Log.d(sfapp, "image aspect: " + imageAspect);
+		Log.d(sfapp, "scaleFactor: " + scaleFactor);
+		Log.d(sfapp, "Scaled dimensions: " + scaleWidth + "/" + scaleHeight);
+
+		xoffsetold = xoffset;
+		yoffsetold = yoffset;
+		oldImage = currentImage;
+
+		xoffset = (float) ((width - scaleWidth) / 2.0);
+		yoffset = (float) ((height - scaleHeight) / 2.0);
+
+		// create a matrix for the manipulation
+		Matrix matrix = new Matrix();
+		// resize the bit map
+		matrix.postScale(scaleWidth, scaleHeight);
+
+		// recreate the new Bitmap
+		return Bitmap.createScaledBitmap(image, (int) scaleWidth, (int) scaleHeight, true);
+	}
+
 	private void repaintImage(Canvas canvas) {
 		if (currentImage != null) {
-			Log.d("repaintImage", "drawing on canvas");
+			Log.d(sfapp, "drawing on canvas");
 			canvas.drawColor(Color.BLACK);
 			canvas.drawBitmap(currentImage, xoffset, yoffset, null);
-			Log.d("repaintImage", "drawing done");
+			Log.d(sfapp, "drawing done");
 		}
 	}
 
 	private Bitmap fetchBitmap(String url) {
 		try {
-			Log.d("image", "Fetching image...");
+			Log.d(sfapp, "Fetching image...");
 			URL myImageURL = new URL(url);
 			HttpURLConnection connection = (HttpURLConnection) myImageURL.openConnection();
 			connection.setDoInput(true);
 			connection.connect();
 			InputStream is = connection.getInputStream();
-			Log.d("image", is.available() + " bytes available to be read from server");
-			Log.d("image", "creating drawable...");
+			Log.d(sfapp, is.available() + " bytes available to be read from server");
+			Log.d(sfapp, "creating drawable...");
 			Bitmap bitmap = BitmapFactory.decodeStream(is);
 
 			return bitmap;
@@ -402,7 +432,7 @@ public class LiveWallpaperPainting extends Thread {
 		requestParameters.put("viewSource", viewSource);
 
 		try {
-			Log.d("getNewImageUrl", "Sending request");
+			Log.d(sfapp, "Sending request");
 			// add authentication parameters to the request
 			HttpResponse response;
 			if (useAuthentication) {
@@ -412,9 +442,8 @@ public class LiveWallpaperPainting extends Thread {
 				response = HttpRequest.doPost(requestUrl, requestParameters);
 			}
 			String httpResult = EntityUtils.toString(response.getEntity());
-			ArrayList<String> resultList = new ArrayList<String>();
 			if (useAuthentication && Authentication.parseResponse(httpResult) == false) {
-				Log.d("getNewImageUrl", "RE-SENDING REQUEST with new auth credentials");
+				Log.d(sfapp, "RE-SENDING REQUEST with new auth credentials");
 				// Retry request with new otp sequence if it failed for the
 				// first time
 				Map<String, String> authRequestParameters = Authentication.addAuthParametersToQuery(requestParameters);
@@ -435,18 +464,21 @@ public class LiveWallpaperPainting extends Thread {
 					return null;
 				int i = random.nextInt(numResults);
 				JSONObject jsonItem = items.getJSONObject(i);
-				String thumb = "http://www.sofurry.com" + jsonItem.getString("thumb");
+				String thumb = jsonItem.getString("thumb");
+				if (!thumb.startsWith("http://www.sofurry.com")) {
+					thumb = "http://www.sofurry.com" + thumb;
+				}
 				pageUrl = "http://www.sofurry.com/page/" + jsonItem.getString("pid");
 				String preview = thumb.replace("/thumbnails/", "/preview/");
 				return preview;
 			}
 
 		} catch (ClientProtocolException e) {
-			Log.e("getNewImageUrl", "Exception: ", e);
+			Log.e(sfapp, "Exception: ", e);
 		} catch (IOException e) {
-			Log.e("getNewImageUrl", "Exception: ", e);
+			Log.e(sfapp, "Exception: ", e);
 		} catch (JSONException e) {
-			Log.e("getNewImageUrl", "Exception: ", e);
+			Log.e(sfapp, "Exception: ", e);
 			errorMessage = "User/Password wrong!";
 		}
 
@@ -456,17 +488,17 @@ public class LiveWallpaperPainting extends Thread {
 	protected String parseErrorMessage(String httpResult) {
 		try {
 			// check for json error message and parse it
-			Log.d("Chat.parseErrorMessage", "response: " + httpResult);
+			Log.d(sfapp, "response: " + httpResult);
 			JSONObject jsonParser;
 			jsonParser = new JSONObject(httpResult);
 			int messageType = jsonParser.getInt("messageType");
 			if (messageType == AJAXTYPE_APIERROR) {
 				String error = jsonParser.getString("error");
-				Log.e("ChatList.parseErrorMessage", "Error: " + error);
+				Log.e(sfapp, "Error: " + error);
 				return error;
 			}
 		} catch (JSONException e) {
-			Log.e("Chat.parseResponse", e.toString());
+			Log.e(sfapp, e.toString());
 		}
 
 		return null;

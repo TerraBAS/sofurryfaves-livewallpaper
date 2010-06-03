@@ -53,7 +53,7 @@ public class LiveWallpaperService extends WallpaperService {
 		
 		SampleEngine() {
 			SurfaceHolder holder = getSurfaceHolder();
-			prefs = LiveWallpaperService.this.getSharedPreferences(PREFERENCES, 0);
+			prefs = LiveWallpaperService.this.getSharedPreferences(LiveWallpaperService.PREFERENCES, 0);
 			prefs.registerOnSharedPreferenceChangeListener(this);
 			painting = new LiveWallpaperPainting(holder, getApplicationContext(), 
 					Integer.parseInt(prefs.getString(PREFERENCE_ROTATETIME, "1800")),
