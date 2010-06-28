@@ -295,6 +295,11 @@ public class LiveWallpaperPainting extends Thread {
 		// TODO: fetch new image
 		this.wait = false;
 		synchronized (this) {
+			if (contentLoaderThread == null || !contentLoaderThread.isAlive()){
+				contentLoaderThread = new ContentLoaderThread(wallpaperQueue);
+				contentLoaderThread.start();
+			}
+			
 			long currentTime = System.currentTimeMillis();
 			if (currentTime - lastTouchTime > 60) {
 				Log.d(sfapp, "Currenttime: " + currentTime + " lastTouch: " + lastTouchTime + " run: " + run
@@ -349,7 +354,6 @@ public class LiveWallpaperPainting extends Thread {
 					Log.d(sfapp, "Image: " + entry.getImageUrl());
 					Log.d(sfapp, "creating drawable image");
 					image = fetchBitmap(entry);
-//					SubmissionStorage.saveSubmissionImage(entry.getId(), bitmap);
 				}
 			}
 			if (image != null) {
