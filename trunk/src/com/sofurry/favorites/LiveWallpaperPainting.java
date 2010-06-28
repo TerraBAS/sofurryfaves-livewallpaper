@@ -597,7 +597,7 @@ public class LiveWallpaperPainting extends Thread {
 
 	public void clearPreloadedWallpapers() {
 		wallpaperQueue.clear();
-		FileStorage.clearFileCache();
+		FileStorage.clearFileCache(null);
 		
 	}
 

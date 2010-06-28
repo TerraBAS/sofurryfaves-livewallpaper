@@ -148,7 +148,6 @@ public class LiveWallpaperService extends WallpaperService {
 		@Override
 		public void onOffsetsChanged(float xOffset, float yOffset, 
 				float xStep, float yStep, int xPixels, int yPixels) {
-			Log.d("LW Service", "onOffsetsChanged");
 		}
 
 		@Override
