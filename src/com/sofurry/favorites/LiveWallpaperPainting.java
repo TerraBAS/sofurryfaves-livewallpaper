@@ -11,7 +11,6 @@ import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -70,6 +69,7 @@ public class LiveWallpaperPainting extends Thread {
 	private LinkedBlockingQueue<WallpaperEntry> wallpaperQueue = new LinkedBlockingQueue<WallpaperEntry>();
 	private WallpaperEntry currentWallpaperEntry;
 	private static ContentLoaderThread contentLoaderThread = null;
+	private Bitmap hourglass;
 
 	/** Time tracking */
 	private long previousTime;
@@ -80,6 +80,7 @@ public class LiveWallpaperPainting extends Thread {
 		// the context is needed is you want to inflate
 		// some resources from your livewallpaper .apk
 		FileStorage.setContext(context);
+		hourglass = BitmapFactory.decodeResource(context.getResources(), R.drawable.hourglass);
 		this.surfaceHolder = surfaceHolder;
 		this.context = context;
 		// don't animate until surface is created and displayed
@@ -178,13 +179,14 @@ public class LiveWallpaperPainting extends Thread {
 					repaintImage(c);
 					Log.d(sfapp, "Rendering loading text...");
 					Paint paint = new Paint();
-					paint.setColor(Color.BLACK);
-					paint.setStyle(Paint.Style.FILL);
+//					paint.setColor(Color.BLACK);
+//					paint.setStyle(Paint.Style.FILL);
 					paint.setAntiAlias(true);
-					paint.setTextSize(25);
-					c.drawText("Loading next image...", 22, 72, paint);
-					paint.setColor(Color.YELLOW);
-					c.drawText("Loading next image...", 20, 70, paint);
+//					paint.setTextSize(25);
+					c.drawBitmap(hourglass, 20, 70, paint);
+//					c.drawText("Loading next image...", 22, 72, paint);
+//					paint.setColor(Color.YELLOW);
+//					c.drawText("Loading next image...", 20, 70, paint);
 
 					this.surfaceHolder.unlockCanvasAndPost(c);
 					errorMessage = null;
