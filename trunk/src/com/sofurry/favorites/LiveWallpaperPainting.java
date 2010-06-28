@@ -344,7 +344,7 @@ public class LiveWallpaperPainting extends Thread {
 				SubmissionStorage.deleteSubmissionImage(entry.getId());
 			} else {
 				entry = getNewWallpaper();
-				if (entry.getImageUrl() != null) {
+				if (entry != null && entry.getImageUrl() != null) {
 					currentWallpaperEntry = entry;
 					Log.d(sfapp, "Image: " + entry.getImageUrl());
 					Log.d(sfapp, "creating drawable image");
