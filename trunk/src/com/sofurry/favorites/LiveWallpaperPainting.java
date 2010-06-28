@@ -5,10 +5,10 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -33,6 +33,9 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
+import com.sofurry.favorites.util.FileStorage;
+import com.sofurry.favorites.util.SubmissionStorage;
+
 public class LiveWallpaperPainting extends Thread {
 
 	public static final int AJAXTYPE_APIERROR = 5;
@@ -46,14 +49,13 @@ public class LiveWallpaperPainting extends Thread {
 	private boolean run;
 	private int width;
 	private int height;
-	private String imageUrl;
-	private int totalFavoritePages;
+	private static int totalFavoritePages;
 	private int rotateInterval = 1800;
-	private int contentLevel = 0;
-	private int contentSource = 1;
-	private String search = "";
-	private String username = "";
-	private String password = "";
+	private static int contentLevel = 0;
+	private static int contentSource = 1;
+	private static String search = "";
+	private static String username = "";
+	private static String password = "";
 	private long lastTouchTime;
 	private long lastLastTouchTime;
 	private long doubleTouchThreshold = 300;
@@ -62,10 +64,12 @@ public class LiveWallpaperPainting extends Thread {
 	private Bitmap oldImage = null;
 	private float xoffset, yoffset;
 	private float xoffsetold, yoffsetold;
-	private String pageUrl = null;
-	private String errorMessage = null;
+	private static String errorMessage = null;
 	private boolean skipTransition = false;
-	private final String sfapp = "SoFurry LiveWallpaper";
+	private final static String sfapp = "SoFurry LiveWallpaper";
+	private LinkedBlockingQueue<WallpaperEntry> wallpaperQueue = new LinkedBlockingQueue<WallpaperEntry>();
+	private WallpaperEntry currentWallpaperEntry;
+	private static ContentLoaderThread contentLoaderThread = null;
 
 	/** Time tracking */
 	private long previousTime;
@@ -75,6 +79,7 @@ public class LiveWallpaperPainting extends Thread {
 		// keep a reference of the context and the surface
 		// the context is needed is you want to inflate
 		// some resources from your livewallpaper .apk
+		FileStorage.setContext(context);
 		this.surfaceHolder = surfaceHolder;
 		this.context = context;
 		// don't animate until surface is created and displayed
@@ -89,6 +94,11 @@ public class LiveWallpaperPainting extends Thread {
 		this.lastTouchTime = 0;
 		this.lastLastTouchTime = 0;
 		Log.i(sfapp, "LiveWallpaperPainting constructor called");
+		
+		if (contentLoaderThread == null || !contentLoaderThread.isAlive()) {
+			contentLoaderThread = new ContentLoaderThread(wallpaperQueue);
+			contentLoaderThread.start();
+		}
 	}
 
 	/**
@@ -130,17 +140,18 @@ public class LiveWallpaperPainting extends Thread {
 		Canvas c = null;
 		while (run) {
 			try {
-//				while (width == 0 || height == 0) {
-//					try {
-//						Thread.sleep(100);
-//					} catch (InterruptedException e) {
-//						Log.i(sfapp, "Sleep interrupted", e);
-//					}
-//				}
-				
+				// while (width == 0 || height == 0) {
+				// try {
+				// Thread.sleep(100);
+				// } catch (InterruptedException e) {
+				// Log.i(sfapp, "Sleep interrupted", e);
+				// }
+				// }
+
 				Log.d(sfapp, "locking canvas 1");
 				c = this.surfaceHolder.lockCanvas(null);
-				Log.i(sfapp, "Width:"+width+" Height:"+height+" CWidth:"+c.getWidth()+ " CHeight:"+c.getHeight());
+				Log.i(sfapp, "Width:" + width + " Height:" + height + " CWidth:" + c.getWidth() + " CHeight:"
+						+ c.getHeight());
 				if (width == 0)
 					width = c.getWidth();
 				if (height == 0)
@@ -191,7 +202,7 @@ public class LiveWallpaperPainting extends Thread {
 					Log.d(sfapp, "Drawing...");
 					if (this.run)
 						repaintImage(c);
-					
+
 					if (errorMessage != null) {
 						paint = new Paint();
 						paint.setColor(Color.RED);
@@ -284,11 +295,14 @@ public class LiveWallpaperPainting extends Thread {
 		synchronized (this) {
 			long currentTime = System.currentTimeMillis();
 			if (currentTime - lastTouchTime > 60) {
-				Log.d(sfapp, "Currenttime: " + currentTime + " lastTouch: " + lastTouchTime + " run: " + run + " wait: " + wait);
+				Log.d(sfapp, "Currenttime: " + currentTime + " lastTouch: " + lastTouchTime + " run: " + run
+						+ " wait: " + wait);
 				if (currentTime - lastTouchTime < doubleTouchThreshold
 						&& currentTime - lastLastTouchTime < doubleTouchThreshold) {
-					if (event.getY() < 200 && pageUrl != null) {
-						Intent defineIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(pageUrl));
+					if (event.getY() < 200 && currentWallpaperEntry != null
+							&& currentWallpaperEntry.getPageUrl() != null) {
+						Intent defineIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(currentWallpaperEntry
+								.getPageUrl()));
 						PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, defineIntent, 0);
 						try {
 							pendingIntent.send();
@@ -298,6 +312,8 @@ public class LiveWallpaperPainting extends Thread {
 					} else {
 						Log.e(sfapp, "Resetting previousTime!");
 						previousTime = 0;
+						lastTouchTime = 0;
+						lastLastTouchTime = 0;
 						notify();
 					}
 				}
@@ -313,27 +329,44 @@ public class LiveWallpaperPainting extends Thread {
 	private void updateImage() {
 		long currentTime = System.currentTimeMillis();
 		long elapsed = currentTime - previousTime;
-		Log.d(sfapp, "updateImage: currentTime="+currentTime+" previousTime="+previousTime);
+		Log.d(sfapp, "updateImage: currentTime=" + currentTime + " previousTime=" + previousTime);
 		if (elapsed > 1000 * rotateInterval) {
 			wait = false;
 			Log.d(sfapp, "fetching image URL");
 			previousTime = currentTime;
-			imageUrl = getNewImageUrl();
-			if (imageUrl != null) {
-				Log.d(sfapp, "Image: " + imageUrl);
-				Log.d(sfapp, "creating drawable image");
-				Bitmap image = fetchBitmap(imageUrl);
-
-				if (image != null) {
-					currentImageBig = image;
-					currentImage = rescaleImage(currentImageBig);
+			Bitmap image = null;
+			WallpaperEntry entry = getNextQueuedWallpaper();
+			if (entry != null) {
+				image = SubmissionStorage.loadSubmissionImage(entry.getId());
+				SubmissionStorage.deleteSubmissionImage(entry.getId());
+			} else {
+				entry = getNewWallpaper();
+				if (entry.getImageUrl() != null) {
+					currentWallpaperEntry = entry;
+					Log.d(sfapp, "Image: " + entry.getImageUrl());
+					Log.d(sfapp, "creating drawable image");
+					image = fetchBitmap(entry);
+//					SubmissionStorage.saveSubmissionImage(entry.getId(), bitmap);
 				}
+			}
+			if (image != null) {
+				currentImageBig = image;
+				currentImage = rescaleImage(currentImageBig);
 			}
 			previousTime = currentTime;
 		}
 		wait = true;
 	}
 
+	private WallpaperEntry getNextQueuedWallpaper() {
+		WallpaperEntry entry = null;
+		if (!wallpaperQueue.isEmpty()) {
+			entry = wallpaperQueue.poll();
+		}
+		return entry;
+	}
+	
+	
 	private Bitmap rescaleImage(Bitmap image) {
 		int imageWidth = currentImageBig.getWidth();
 		int imageHeight = currentImageBig.getHeight();
@@ -382,15 +415,16 @@ public class LiveWallpaperPainting extends Thread {
 		}
 	}
 
-	private Bitmap fetchBitmap(String url) {
+	protected static Bitmap fetchBitmap(WallpaperEntry entry) {
 		try {
 			Log.d(sfapp, "Fetching image...");
-			URL myImageURL = new URL(url);
+			URL myImageURL = new URL(entry.getImageUrl());
 			HttpURLConnection connection = (HttpURLConnection) myImageURL.openConnection();
 			connection.setDoInput(true);
 			connection.connect();
 			InputStream is = connection.getInputStream();
 			Log.d(sfapp, is.available() + " bytes available to be read from server");
+
 			Log.d(sfapp, "creating drawable...");
 			Bitmap bitmap = BitmapFactory.decodeStream(is);
 
@@ -404,18 +438,17 @@ public class LiveWallpaperPainting extends Thread {
 		}
 	}
 
-	private String getNewImageUrl() {
+	protected static WallpaperEntry getNewWallpaper() {
 		Random random = new Random();
 		boolean useAuthentication = false;
-		String viewSource = ""+contentSource;
-		
+		String viewSource = "" + contentSource;
 
 		if (username != null && username.trim().length() > 0) {
 			useAuthentication = true;
 			Authentication.updateAuthenticationInformation(username, password);
-		} else if (viewSource.equals("5") && (search == null || search.trim().length()<=0)) {
+		} else if (viewSource.equals("5") && (search == null || search.trim().length() <= 0)) {
 			viewSource = "8"; // Show featured works if no search term entered
-		} else if (!viewSource.equals("0") && !viewSource.equals("5") ){
+		} else if (!viewSource.equals("0") && !viewSource.equals("5")) {
 			viewSource = "8"; // Show featured works if not authenticated
 		}
 		String requestUrl = "http://chat.sofurry.com/ajaxfetch.php";
@@ -468,24 +501,25 @@ public class LiveWallpaperPainting extends Thread {
 				if (!thumb.startsWith("http://www.sofurry.com")) {
 					thumb = "http://www.sofurry.com" + thumb;
 				}
-				pageUrl = "http://www.sofurry.com/page/" + jsonItem.getString("pid");
-				String preview = thumb.replace("/thumbnails/", "/preview/");
-				return preview;
+				WallpaperEntry entry = new WallpaperEntry();
+				entry.setId(Integer.parseInt(jsonItem.getString("pid")));
+				entry.setPageUrl("http://www.sofurry.com/page/" + jsonItem.getString("pid"));
+				entry.setImageUrl(thumb.replace("/thumbnails/", "/preview/"));
+				return entry;
 			}
 
-		} catch (ClientProtocolException e) {
-			Log.e(sfapp, "Exception: ", e);
-		} catch (IOException e) {
-			Log.e(sfapp, "Exception: ", e);
 		} catch (JSONException e) {
 			Log.e(sfapp, "Exception: ", e);
 			errorMessage = "User/Password wrong!";
+		} catch (Exception e) {
+			Log.e(sfapp, "Exception: ", e);
+			errorMessage = "Error loading image!";
 		}
 
 		return null;
 	}
 
-	protected String parseErrorMessage(String httpResult) {
+	protected static String parseErrorMessage(String httpResult) {
 		try {
 			// check for json error message and parse it
 			Log.d(sfapp, "response: " + httpResult);
@@ -561,5 +595,10 @@ public class LiveWallpaperPainting extends Thread {
 		this.totalFavoritePages = totalFavoritePages;
 	}
 
+	public void clearPreloadedWallpapers() {
+		wallpaperQueue.clear();
+		FileStorage.clearFileCache();
+		
+	}
 
 }
