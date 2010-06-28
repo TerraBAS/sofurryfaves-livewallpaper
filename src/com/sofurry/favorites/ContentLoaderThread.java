@@ -1,10 +1,12 @@
 package com.sofurry.favorites;
 
+import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import android.graphics.Bitmap;
 import android.util.Log;
 
+import com.sofurry.favorites.util.FileStorage;
 import com.sofurry.favorites.util.SubmissionStorage;
 
 public class ContentLoaderThread extends Thread {
@@ -33,6 +35,11 @@ public class ContentLoaderThread extends Thread {
 					image = LiveWallpaperPainting.fetchBitmap(entry);
 					SubmissionStorage.saveSubmissionImage(entry.getId(), image);
 					resultList.add(entry);
+					ArrayList<String> fileList = new ArrayList<String>();
+					for (WallpaperEntry e : resultList) {
+						fileList.add("image"+e.getId());
+					}
+					FileStorage.clearFileCache(fileList);
 				}
 			}
 			try {
