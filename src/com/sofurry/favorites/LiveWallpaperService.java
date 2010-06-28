@@ -71,6 +71,7 @@ public class LiveWallpaperService extends WallpaperService {
 			painting.setSearch(prefs.getString(PREFERENCE_SEARCH, ""));
 			painting.setUsername(prefs.getString(PREFERENCE_USERNAME, ""));
 			painting.setPassword(prefs.getString(PREFERENCE_PASSWORD, ""));
+			painting.clearPreloadedWallpapers();
 		}
 
 		@Override
