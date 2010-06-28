@@ -337,6 +337,7 @@ public class LiveWallpaperPainting extends Thread {
 			Bitmap image = null;
 			WallpaperEntry entry = getNextQueuedWallpaper();
 			if (entry != null) {
+				currentWallpaperEntry = entry;
 				image = SubmissionStorage.loadSubmissionImage(entry.getId());
 				SubmissionStorage.deleteSubmissionImage(entry.getId());
 			} else {
