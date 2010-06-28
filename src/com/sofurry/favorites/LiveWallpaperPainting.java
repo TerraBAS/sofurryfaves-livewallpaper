@@ -130,6 +130,9 @@ public class LiveWallpaperPainting extends Thread {
 	public void stopPainting() {
 		Log.d(sfapp, "stopPainting");
 		this.run = false;
+		if (contentLoaderThread != null)
+			contentLoaderThread.stopThread();
+		
 		synchronized (this) {
 			this.notify();
 		}
@@ -368,7 +371,9 @@ public class LiveWallpaperPainting extends Thread {
 	private WallpaperEntry getNextQueuedWallpaper() {
 		WallpaperEntry entry = null;
 		if (!wallpaperQueue.isEmpty()) {
+			Log.d(sfapp, "Wallpaper queue has "+wallpaperQueue.size()+" entries");
 			entry = wallpaperQueue.poll();
+			Log.d(sfapp, "Taking entry from queue: "+entry.getId());
 		}
 		return entry;
 	}

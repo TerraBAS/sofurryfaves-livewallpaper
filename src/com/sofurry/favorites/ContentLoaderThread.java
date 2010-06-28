@@ -25,6 +25,7 @@ public class ContentLoaderThread extends Thread {
 
 	public void run() {
 		while (runIt) {
+			Log.d("SF Preloader", "Checking resultList size: "+resultList.size());
 
 			while (resultList.size() < 5) {
 				// TODO: Load submission data and images
@@ -48,5 +49,7 @@ public class ContentLoaderThread extends Thread {
 				e.printStackTrace();
 			}
 		}
+		Log.d("SF Preloader", "EXITING CONTENT LOADER THREAD");
+
 	}
 }
