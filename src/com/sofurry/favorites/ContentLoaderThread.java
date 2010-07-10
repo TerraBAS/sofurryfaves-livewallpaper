@@ -25,13 +25,11 @@ public class ContentLoaderThread extends Thread {
 
 	public void run() {
 		while (runIt) {
-			Log.d("SF Preloader", "Checking resultList size: "+resultList.size());
-
 			while (resultList.size() < 5) {
 				// TODO: Load submission data and images
 				Bitmap image = null;
 				WallpaperEntry entry = LiveWallpaperPainting.getNewWallpaper();
-				if (entry.getImageUrl() != null) {
+				if (entry != null && entry.getImageUrl() != null) {
 					Log.d("SF Preloader", "Pre-loaded Image: " + entry.getImageUrl());
 					image = LiveWallpaperPainting.fetchBitmap(entry);
 					SubmissionStorage.saveSubmissionImage(entry.getId(), image);

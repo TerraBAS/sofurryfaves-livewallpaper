@@ -1,11 +1,15 @@
 package com.sofurry.favorites.util;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap.CompressFormat;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
+import android.os.Environment;
 import android.util.Log;
 
 public class SubmissionStorage {
@@ -53,5 +57,25 @@ public class SubmissionStorage {
 			Log.e("soFurryApp", "error in saveIcon", e);
 		}
 	}
-	
+
+	public static String saveImageToGallery(String filename, Bitmap icon) {
+		String fullfilepath = null;
+	    try {
+		    File path = new File(Environment.getExternalStorageDirectory()+"/FurryWallpapers");
+	        path.mkdirs();
+		    File file = new File(path, filename);
+		    fullfilepath = file.getAbsolutePath();
+		    Log.d("SF Wallpaper", "Saving image "+file.getAbsolutePath());
+//		    file.createNewFile();
+
+	        FileOutputStream os = new FileOutputStream(file);
+			icon.compress(CompressFormat.JPEG, 80, os);
+	        os.close();
+	    } catch (Exception e) {
+	        Log.w("ExternalStorage", "Error writing file", e);
+	    }
+	    return fullfilepath;
+	}
+
+
 }

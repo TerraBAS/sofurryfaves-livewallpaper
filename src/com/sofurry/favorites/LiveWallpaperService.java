@@ -1,5 +1,7 @@
 package com.sofurry.favorites;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.service.wallpaper.WallpaperService;
 import android.util.Log;
@@ -157,5 +159,5 @@ public class LiveWallpaperService extends WallpaperService {
 		}
 		
 	}
-	
+
 }

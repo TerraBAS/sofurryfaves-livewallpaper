@@ -2,6 +2,7 @@ package com.sofurry.favorites;
 
 public class WallpaperEntry {
 	private int id;
+	private String name;
 	private String imageUrl;
 	private String pageUrl;
 	public String getPageUrl() {
@@ -22,4 +23,11 @@ public class WallpaperEntry {
 	public void setImageUrl(String imageUrl) {
 		this.imageUrl = imageUrl;
 	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	
 }

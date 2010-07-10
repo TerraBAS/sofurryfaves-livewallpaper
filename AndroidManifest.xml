@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="com.sofurry.favorites"
-      android:versionCode="12"
-      android:versionName="1.11">
+      android:versionCode="13"
+      android:versionName="1.12">
         <application 
                 android:icon="@drawable/icon" 
                 android:label="@string/app_name">
@@ -24,8 +24,17 @@
                         android:name=".LiveWallpaperSettings" 
                         android:theme="@android:style/Theme.Light.WallpaperSettings"
                         android:exported="true" />
+                <activity 
+                        android:label="@string/app_name" 
+                        android:name=".MainMenu" 
+                        android:theme="@android:style/Theme.Dialog">
+			            <intent-filter>
+            			    <action android:name="android.intent.action.MAINMENU" />
+                			<category android:name="android.intent.category.DEFAULT" />
+            			</intent-filter>
+				</activity>
         </application>
         <uses-sdk android:minSdkVersion="7" />
-<uses-permission android:name="android.permission.INTERNET" /> 
-
+	<uses-permission android:name="android.permission.INTERNET" /> 
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> 
 </manifest> 
