@@ -27,12 +27,14 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
 import com.sofurry.favorites.util.FileStorage;
+import com.sofurry.favorites.util.MediaScannerNotifier;
 import com.sofurry.favorites.util.SubmissionStorage;
 
 public class LiveWallpaperPainting extends Thread {
@@ -70,6 +72,7 @@ public class LiveWallpaperPainting extends Thread {
 	private WallpaperEntry currentWallpaperEntry;
 	private static ContentLoaderThread contentLoaderThread = null;
 	private Bitmap hourglass;
+	private static LiveWallpaperPainting instance = null;
 
 	/** Time tracking */
 	private long previousTime;
@@ -100,6 +103,7 @@ public class LiveWallpaperPainting extends Thread {
 			contentLoaderThread = new ContentLoaderThread(wallpaperQueue);
 			contentLoaderThread.start();
 		}
+		instance = this;
 	}
 
 	/**
@@ -182,14 +186,8 @@ public class LiveWallpaperPainting extends Thread {
 					repaintImage(c);
 					Log.d(sfapp, "Rendering loading text...");
 					Paint paint = new Paint();
-//					paint.setColor(Color.BLACK);
-//					paint.setStyle(Paint.Style.FILL);
 					paint.setAntiAlias(true);
-//					paint.setTextSize(25);
 					c.drawBitmap(hourglass, 20, 70, paint);
-//					c.drawText("Loading next image...", 22, 72, paint);
-//					paint.setColor(Color.YELLOW);
-//					c.drawText("Loading next image...", 20, 70, paint);
 
 					this.surfaceHolder.unlockCanvasAndPost(c);
 					errorMessage = null;
@@ -311,20 +309,23 @@ public class LiveWallpaperPainting extends Thread {
 						&& currentTime - lastLastTouchTime < doubleTouchThreshold) {
 					if (event.getY() < 200 && currentWallpaperEntry != null
 							&& currentWallpaperEntry.getPageUrl() != null) {
-						Intent defineIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(currentWallpaperEntry
-								.getPageUrl()));
-						PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, defineIntent, 0);
+						launchBrowser();
+					} else {
+//						Log.e(sfapp, "Resetting previousTime!");
+//						previousTime = 0;
+//						lastTouchTime = 0;
+//						lastLastTouchTime = 0;
+//						notify();
+						
+						Intent mainMenuIntent = new Intent(context, MainMenu.class);
+						PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, mainMenuIntent, 0);
 						try {
 							pendingIntent.send();
 						} catch (CanceledException e) {
 							e.printStackTrace();
 						}
-					} else {
-						Log.e(sfapp, "Resetting previousTime!");
-						previousTime = 0;
-						lastTouchTime = 0;
-						lastLastTouchTime = 0;
-						notify();
+						
+						
 					}
 				}
 				lastLastTouchTime = lastTouchTime;
@@ -333,6 +334,72 @@ public class LiveWallpaperPainting extends Thread {
 		}
 	}
 
+	public static void launchSaveImage() {
+		synchronized (instance) {
+			if (instance.currentImageBig != null) {
+				String file = SubmissionStorage.saveImageToGallery(instance.currentWallpaperEntry.getName()+".jpg", instance.currentImageBig);
+		        // Tell the media scanner about the new file so that it is
+		        // immediately available to the user.
+				MediaScannerNotifier notifier = new MediaScannerNotifier(instance.context, file, null);
+		        //MediaScannerConnection.scanFile(instance.context, new String[]{file}, null);
+			}
+		}
+	}
+	
+	
+//    public static void saveMediaEntry(String imagePath,String title,String description,long dateTaken,int orientation,Location loc) {
+//    	synchronized (instance) {
+//    		ContentValues v = new ContentValues();
+//    		v.put(Images.Media.TITLE, title);
+//    		v.put(Images.Media.DISPLAY_NAME, title);
+//    		v.put(Images.Media.DESCRIPTION, description);
+//    		v.put(Images.Media.DATE_ADDED, dateTaken);
+//    		v.put(Images.Media.DATE_TAKEN, dateTaken);
+//    		v.put(Images.Media.DATE_MODIFIED, dateTaken) ;
+//    		v.put(Images.Media.MIME_TYPE, "image/jpeg");
+//    		v.put(Images.Media.ORIENTATION, orientation);
+//    		File f = new File(imagePath) ;
+//    		File parent = f.getParentFile() ;
+//    		String path = parent.toString().toLowerCase() ;
+//    		String name = parent.getName().toLowerCase() ;
+//    		v.put(Images.ImageColumns.BUCKET_ID, path.hashCode());
+//    		v.put(Images.ImageColumns.BUCKET_DISPLAY_NAME, name);
+//    		v.put(Images.Media.SIZE,f.length()) ;
+//    		f = null ;
+//    		v.put("_data",imagePath) ;
+//    		ContentResolver c = instance.context.getContentResolver() ;
+//    		c.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
+//    	}
+//    }
+
+
+	public static void launchBrowser() {
+		synchronized (instance) {
+			if (instance.currentWallpaperEntry != null && instance.currentWallpaperEntry.getPageUrl() != null) {
+				Intent defineIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(instance.currentWallpaperEntry
+						.getPageUrl()));
+				PendingIntent pendingIntent = PendingIntent.getActivity(instance.context, 0, defineIntent, 0);
+				try {
+					pendingIntent.send();
+				} catch (CanceledException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	public static void launchNextImage() {
+		Log.e(sfapp, "Resetting previousTime!");
+		synchronized (instance) {
+			instance.previousTime = 0;
+			instance.lastTouchTime = 0;
+			instance.lastLastTouchTime = 0;
+			instance.notify();
+		}
+	}
+	
+	
+	
 	/**
 	 * load the new image
 	 */
@@ -497,6 +564,7 @@ public class LiveWallpaperPainting extends Thread {
 			}
 			String errorMessage = parseErrorMessage(httpResult);
 			if (errorMessage == null) {
+				Log.d(sfapp, httpResult);
 				JSONObject jsonParser = new JSONObject(httpResult);
 				JSONArray pagecontents = new JSONArray(jsonParser.getString("pagecontents"));
 				int pages = pagecontents.getJSONObject(0).getInt("totalpages");
@@ -515,6 +583,7 @@ public class LiveWallpaperPainting extends Thread {
 				}
 				WallpaperEntry entry = new WallpaperEntry();
 				entry.setId(Integer.parseInt(jsonItem.getString("pid")));
+				entry.setName(jsonItem.getString("name"));
 				entry.setPageUrl("http://www.sofurry.com/page/" + jsonItem.getString("pid"));
 				entry.setImageUrl(thumb.replace("/thumbnails/", "/preview/"));
 				return entry;
