@@ -26,12 +26,12 @@
             android:entries="@array/rotatetime_names"
             android:entryValues="@array/rotatetime_values" />
 
-    <ListPreference
+    <!--ListPreference
             android:key="preference_contentlevel"
             android:title="@string/preference_contentlevel_title"
             android:summary="@string/preference_contentlevel_summary"
             android:entries="@array/contentlevel_names"
-            android:entryValues="@array/contentlevel_values" />
+            android:entryValues="@array/contentlevel_values" /-->
 
     <ListPreference
             android:key="preference_contentsource"
