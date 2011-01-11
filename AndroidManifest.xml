@@ -38,7 +38,9 @@
 				<intent-filter>
 					<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
 					<!-- Broadcast Receiver that will also process our self created action -->
-					<action android:name="com.sofurry.favorites.LiveWallpaperWidget.ACTION_WIDGET_RECEIVER"/>
+					<action android:name="com.sofurry.favorites.LiveWallpaperWidget.ACTION_WIDGET_OPENBROWSER"/>
+					<action android:name="com.sofurry.favorites.LiveWallpaperWidget.ACTION_WIDGET_NEXTWALLPAPER"/>
+					<action android:name="com.sofurry.favorites.LiveWallpaperWidget.ACTION_WIDGET_SAVEFILE"/>
 				</intent-filter>
 				<meta-data android:name="android.appwidget.provider" android:resource="@xml/sf_widget_provider" />
 			</receiver>
