@@ -41,7 +41,15 @@
 				</intent-filter>
 				<meta-data android:name="android.appwidget.provider" android:resource="@xml/sf_widget_provider" />
 			</receiver>
-			<service android:name=".LiveWallpaperWidgetService"></service>
+			<service android:name="LiveWallpaperWidgetService"
+					 android:exported="true">
+			</service>
+			<!-- service android:name="com.sofurry.favorites.IWallpaperRemote"> 
+   				<intent-filter>
+   					<action android:name="com.sofurry.favorites.IWallpaperRemote"></action>
+   				</intent-filter>
+			</service-->
+			
         </application>
         <uses-sdk android:minSdkVersion="7" />
 	<uses-permission android:name="android.permission.INTERNET" /> 
