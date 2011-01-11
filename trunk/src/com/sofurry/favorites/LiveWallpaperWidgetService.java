@@ -10,6 +10,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 public class LiveWallpaperWidgetService extends Service {
 
@@ -18,7 +19,7 @@ public class LiveWallpaperWidgetService extends Service {
 	public static final String ACTION_WIDGET_SAVEFILE = "saveFile";
 	public static final String UPDATE = "update";
 
-	IWallpaperRemote mService = null;
+	IWallpaperRemoteService mService = null;
 	RemoteServiceConnection mConnection = null;
 	boolean isBound = false;
 
@@ -36,10 +37,7 @@ public class LiveWallpaperWidgetService extends Service {
             Log.i("LiveWallpaperWidgetService", "connecting...");
             mConnection = new RemoteServiceConnection();
             Log.i("LiveWallpaperWidgetService", "binding...");
-			//getApplicationContext().bindService(new Intent(IWallpaperRemote.class.getName()), mConnection, Context.BIND_AUTO_CREATE);
-            Intent i = new Intent("com.sofurry.favorites.IWallpaperRemote");
-            getApplicationContext().bindService(i, mConnection, Context.BIND_AUTO_CREATE);
-            getApplicationContext().startService(i);
+			getApplicationContext().bindService(new Intent(IWallpaperRemoteService.class.getName()), mConnection, Context.BIND_AUTO_CREATE);
             Log.i("LiveWallpaperWidgetService", "binding done.");
 		}
 		
@@ -50,16 +48,28 @@ public class LiveWallpaperWidgetService extends Service {
         	if (mService != null) {
                 Log.i("LiveWallpaperWidgetService", "past mService check");
 				try {
-					mService.remoteOpenBrowser();
+					if (mService.isLiveWallpaperRunning() == false) {
+						showLWPWarning();
+					} else {
+						Toast toast = Toast.makeText(getApplicationContext(), "Opening current wallpaper on sofurry.com...", 1);
+						toast.show();
+						mService.remoteOpenBrowser();
+					}
 				} catch (RemoteException e) {
 	                Log.e("LiveWallpaperWidgetService", "error calling remote function", e);
 				}
 			}
 		} else if (command.equals(ACTION_WIDGET_NEXTWALLPAPER)) {
-            Log.i("LiveWallpaperWidgetService", "COMMAND: Next Wallpaper");
+            Log.i("LiveWallpaperWidgetService", "COMMAND: Next wallpaper");
 			if (mService != null) {
 				try {
-					mService.remoteNextWallpaper();
+					if (mService.isLiveWallpaperRunning() == false) {
+						showLWPWarning();
+					} else {
+						Toast toast = Toast.makeText(getApplicationContext(), "Loading next wallpaper...", 1);
+						toast.show();
+						mService.remoteNextWallpaper();
+					}
 				} catch (RemoteException e) {
 	                Log.e("LiveWallpaperWidgetService", "error calling remote function", e);
 				}
@@ -68,7 +78,13 @@ public class LiveWallpaperWidgetService extends Service {
             Log.i("LiveWallpaperWidgetService", "COMMAND: Save File");
 			if (mService != null) {
 				try {
-					mService.remoteSaveFile();
+					if (mService.isLiveWallpaperRunning() == false) {
+						showLWPWarning();
+					} else {
+						Toast toast = Toast.makeText(getApplicationContext(), "Current wallpaper saved in gallery.", 1);
+						toast.show();
+						mService.remoteSaveFile();
+					}
 				} catch (RemoteException e) {
 	                Log.e("LiveWallpaperWidgetService", "error calling remote function", e);
 				}
@@ -77,17 +93,26 @@ public class LiveWallpaperWidgetService extends Service {
 		
 		//set buttons
 		remoteView.setOnClickPendingIntent(R.id.button_one,LiveWallpaperWidget.makeControlPendingIntent(getApplicationContext(),ACTION_WIDGET_OPENBROWSER,appWidgetId));
-		remoteView.setOnClickPendingIntent(R.id.button_two,LiveWallpaperWidget.makeControlPendingIntent(getApplicationContext(),ACTION_WIDGET_NEXTWALLPAPER,appWidgetId));
+		//TODO: Implement back function
+		//remoteView.setOnClickPendingIntent(R.id.button_two,LiveWallpaperWidget.makeControlPendingIntent(getApplicationContext(),ACTION_WIDGET_PREVWALLPAPER,appWidgetId));
+		remoteView.setOnClickPendingIntent(R.id.button_three,LiveWallpaperWidget.makeControlPendingIntent(getApplicationContext(),ACTION_WIDGET_NEXTWALLPAPER,appWidgetId));
+		remoteView.setOnClickPendingIntent(R.id.button_four,LiveWallpaperWidget.makeControlPendingIntent(getApplicationContext(),ACTION_WIDGET_SAVEFILE,appWidgetId));
 
 		// apply changes to widget
 		appWidgetManager.updateAppWidget(appWidgetId, remoteView);
 		super.onStart(intent, startId);
 	}
 
+	private void showLWPWarning() {
+        Toast toast = Toast.makeText(getApplicationContext(), "Please activate the SoFurry Live Wallpaper!", 3);
+        toast.show();
+	}
+
+	
     class RemoteServiceConnection implements ServiceConnection {
         public void onServiceConnected(ComponentName className, 
 			IBinder service ) {
-            mService = IWallpaperRemote.Stub.asInterface(service);
+            mService = IWallpaperRemoteService.Stub.asInterface(service);
             isBound = true;
             Log.i("WidgetServiceConnection", "binding to service succeeded");
         }

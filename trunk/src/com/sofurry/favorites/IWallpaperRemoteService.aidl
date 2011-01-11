@@ -1,7 +1,8 @@
 package com.sofurry.favorites;
 
-interface IWallpaperRemote {
+interface IWallpaperRemoteService {
 	void remoteOpenBrowser();
 	void remoteNextWallpaper();
 	void remoteSaveFile();
+	boolean isLiveWallpaperRunning();
 }

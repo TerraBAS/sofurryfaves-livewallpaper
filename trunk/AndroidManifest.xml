@@ -44,11 +44,11 @@
 			<service android:name="LiveWallpaperWidgetService"
 					 android:exported="true">
 			</service>
-			<!-- service android:name="com.sofurry.favorites.IWallpaperRemote"> 
+			<service android:name="WallpaperRemoteService"> 
    				<intent-filter>
-   					<action android:name="com.sofurry.favorites.IWallpaperRemote"></action>
+   					<action android:name="com.sofurry.favorites.IWallpaperRemoteService"></action>
    				</intent-filter>
-			</service-->
+			</service>
 			
         </application>
         <uses-sdk android:minSdkVersion="7" />
