@@ -36,14 +36,12 @@
 			<!-- Broadcast Receiver that will process AppWidget updates -->
 			<receiver android:name=".LiveWallpaperWidget" android:label="SoFurry LiveWP Controls">
 				<intent-filter>
+					<category android:name="android.intent.category.DEFAULT" />
 					<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-					<!-- Broadcast Receiver that will also process our self created action -->
-					<action android:name="com.sofurry.favorites.LiveWallpaperWidget.ACTION_WIDGET_OPENBROWSER"/>
-					<action android:name="com.sofurry.favorites.LiveWallpaperWidget.ACTION_WIDGET_NEXTWALLPAPER"/>
-					<action android:name="com.sofurry.favorites.LiveWallpaperWidget.ACTION_WIDGET_SAVEFILE"/>
 				</intent-filter>
 				<meta-data android:name="android.appwidget.provider" android:resource="@xml/sf_widget_provider" />
 			</receiver>
+			<service android:name=".LiveWallpaperWidgetService"></service>
         </application>
         <uses-sdk android:minSdkVersion="7" />
 	<uses-permission android:name="android.permission.INTERNET" /> 
