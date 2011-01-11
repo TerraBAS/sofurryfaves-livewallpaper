@@ -176,11 +176,9 @@ public class LiveWallpaperPainting extends Thread {
 						paint.setColor(Color.YELLOW);
 						paint.setAntiAlias(true);
 						paint.setTextSize(20);
-						ci.drawRect(new Rect(0, 0, width, 200), paint);
-						ci.drawText("Tap 3 times to", 50, 110, paint);
-						ci.drawText("open in Browser", 50, 135, paint);
-						ci.drawText("Tap 3 times to", 50, c.getHeight() / 2, paint);
-						ci.drawText("load new image", 50, c.getHeight() / 2 + 25, paint);
+						ci.drawText("Install the SoFurry", 50, c.getHeight() / 2, paint);
+						ci.drawText("widget to control the", 50, c.getHeight() / 2 + 25, paint);
+						ci.drawText("live wallpaper", 50, c.getHeight() / 2 + 50, paint);
 					}
 
 					repaintImage(c);
