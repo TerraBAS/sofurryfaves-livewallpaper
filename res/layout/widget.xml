@@ -6,14 +6,28 @@
     android:layout_gravity="center" 
     android:layout_height="wrap_content">
     
-<Button android:text="B1" android:id="@+id/button_one" 
+<Button android:text="Browser" android:id="@+id/button_one" 
 	android:layout_gravity="center_horizontal|center" 
 	android:layout_height="fill_parent" 
-	android:layout_width="wrap_content"/>
+	android:layout_width="72dp" 
+	android:layout_marginTop="8px"/>
 	
-<Button android:text="B2" android:id="@+id/button_two" 
+<Button android:text="Back" android:id="@+id/button_two" 
 	android:layout_gravity="center_horizontal|center" 
 	android:layout_height="fill_parent" 
-	android:layout_width="wrap_content"/>
+	android:layout_width="72dp" 
+	android:layout_marginTop="8px"/>
+
+<Button android:text="Next" android:id="@+id/button_three" 
+	android:layout_gravity="center_horizontal|center" 
+	android:layout_height="fill_parent" 
+	android:layout_width="72dp" 
+	android:layout_marginTop="8px"/>
+
+<Button android:text="Save" android:id="@+id/button_four" 
+	android:layout_gravity="center_horizontal|center" 
+	android:layout_height="fill_parent" 
+	android:layout_width="72dp" 
+	android:layout_marginTop="8px"/>
 
 </LinearLayout>

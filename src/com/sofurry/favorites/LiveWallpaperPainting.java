@@ -27,13 +27,11 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
-import android.os.IBinder;
-import android.os.RemoteException;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
+import android.widget.Toast;
 
 import com.sofurry.favorites.util.FileStorage;
 import com.sofurry.favorites.util.MediaScannerNotifier;
@@ -295,44 +293,12 @@ public class LiveWallpaperPainting extends Thread {
 	 * @param event
 	 */
 	public void doTouchEvent(MotionEvent event) {
-		// TODO: fetch new image
 		this.wait = false;
 		synchronized (this) {
 			if (contentLoaderThread == null || !contentLoaderThread.isAlive()){
 				contentLoaderThread = new ContentLoaderThread(wallpaperQueue);
 				contentLoaderThread.start();
 			}
-			
-			long currentTime = System.currentTimeMillis();
-			if (currentTime - lastTouchTime > 60) {
-				Log.d(sfapp, "Currenttime: " + currentTime + " lastTouch: " + lastTouchTime + " run: " + run
-						+ " wait: " + wait);
-				if (currentTime - lastTouchTime < doubleTouchThreshold
-						&& currentTime - lastLastTouchTime < doubleTouchThreshold) {
-					if (event.getY() < 200 && currentWallpaperEntry != null
-							&& currentWallpaperEntry.getPageUrl() != null) {
-						launchBrowser();
-					} else {
-//						Log.e(sfapp, "Resetting previousTime!");
-//						previousTime = 0;
-//						lastTouchTime = 0;
-//						lastLastTouchTime = 0;
-//						notify();
-						
-						Intent mainMenuIntent = new Intent(context, MainMenu.class);
-						PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, mainMenuIntent, 0);
-						try {
-							pendingIntent.send();
-						} catch (CanceledException e) {
-							e.printStackTrace();
-						}
-						
-						
-					}
-				}
-				lastLastTouchTime = lastTouchTime;
-			}
-			lastTouchTime = System.currentTimeMillis();
 		}
 	}
 
@@ -400,6 +366,12 @@ public class LiveWallpaperPainting extends Thread {
 		}
 	}
 	
+	public static boolean isLiveWallpaperRunning() {
+		if (instance == null)
+			return false;
+		
+		return true;
+	}
 	
 	
 	/**
