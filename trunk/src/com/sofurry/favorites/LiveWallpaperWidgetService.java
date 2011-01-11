@@ -19,6 +19,7 @@ public class LiveWallpaperWidgetService extends Service {
 	public static final String UPDATE = "update";
 
 	IWallpaperRemote mService = null;
+	RemoteServiceConnection mConnection = null;
 	boolean isBound = false;
 
 	@Override
@@ -32,9 +33,14 @@ public class LiveWallpaperWidgetService extends Service {
 				.getInstance(getApplicationContext());
 
 		if (!isBound || mService == null) {
+            Log.i("LiveWallpaperWidgetService", "connecting...");
+            mConnection = new RemoteServiceConnection();
             Log.i("LiveWallpaperWidgetService", "binding...");
-			getApplicationContext().bindService(new Intent(IWallpaperRemote.class.getName()),
-                mConnection, Context.BIND_AUTO_CREATE);
+			//getApplicationContext().bindService(new Intent(IWallpaperRemote.class.getName()), mConnection, Context.BIND_AUTO_CREATE);
+            Intent i = new Intent("com.sofurry.favorites.IWallpaperRemote");
+            getApplicationContext().bindService(i, mConnection, Context.BIND_AUTO_CREATE);
+            getApplicationContext().startService(i);
+            Log.i("LiveWallpaperWidgetService", "binding done.");
 		}
 		
         if (command == null) {
@@ -42,11 +48,11 @@ public class LiveWallpaperWidgetService extends Service {
         } else if (command.equals(ACTION_WIDGET_OPENBROWSER)) {
             Log.i("LiveWallpaperWidgetService", "COMMAND: Open Browser");
         	if (mService != null) {
+                Log.i("LiveWallpaperWidgetService", "past mService check");
 				try {
 					mService.remoteOpenBrowser();
 				} catch (RemoteException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+	                Log.e("LiveWallpaperWidgetService", "error calling remote function", e);
 				}
 			}
 		} else if (command.equals(ACTION_WIDGET_NEXTWALLPAPER)) {
@@ -55,8 +61,7 @@ public class LiveWallpaperWidgetService extends Service {
 				try {
 					mService.remoteNextWallpaper();
 				} catch (RemoteException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+	                Log.e("LiveWallpaperWidgetService", "error calling remote function", e);
 				}
 			}
 		} else if (command.equals(ACTION_WIDGET_SAVEFILE)) {
@@ -65,8 +70,7 @@ public class LiveWallpaperWidgetService extends Service {
 				try {
 					mService.remoteSaveFile();
 				} catch (RemoteException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+	                Log.e("LiveWallpaperWidgetService", "error calling remote function", e);
 				}
 			}
 		}
@@ -80,31 +84,22 @@ public class LiveWallpaperWidgetService extends Service {
 		super.onStart(intent, startId);
 	}
 
-    /**
-     * Class for interacting with the main interface of the service.
-     */
-    private ServiceConnection mConnection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className,
-                IBinder service) {
-            // This is called when the connection with the service has been
-            // established, giving us the service object we can use to
-            // interact with the service.  We are communicating with our
-            // service through an IDL interface, so get a client-side
-            // representation of that from the raw service object.
+    class RemoteServiceConnection implements ServiceConnection {
+        public void onServiceConnected(ComponentName className, 
+			IBinder service ) {
             mService = IWallpaperRemote.Stub.asInterface(service);
             isBound = true;
             Log.i("WidgetServiceConnection", "binding to service succeeded");
         }
 
         public void onServiceDisconnected(ComponentName className) {
-            // This is called when the connection with the service has been
-            // unexpectedly disconnected -- that is, its process crashed.
             mService = null;
             isBound = false;
             Log.i("WidgetServiceConnection", "binding to service lost!");
         }
     };
 
+    
 	@Override
 	public IBinder onBind(Intent arg0) {
 		return null;
@@ -112,6 +107,7 @@ public class LiveWallpaperWidgetService extends Service {
 
 	@Override
 	public void onDestroy() {
+        Log.i("LiveWallpaperWidgetService", "onDestroy");
 		if (mConnection != null)
 			getApplicationContext().unbindService(mConnection);
 	}
