@@ -3,31 +3,38 @@
     android:layout_width="fill_parent"
 	android:orientation="horizontal"
     android:background="@drawable/widget_bg_normal" 
-    android:layout_gravity="center" 
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content" android:layout_gravity="fill_horizontal|center">
     
-<Button android:text="Browser" android:id="@+id/button_one" 
+<Button android:id="@+id/button_one" 
 	android:layout_gravity="center_horizontal|center" 
 	android:layout_height="fill_parent" 
 	android:layout_width="72dp" 
+	android:drawableTop="@drawable/iconsofurry"
+	android:paddingTop="16dp"
 	android:layout_marginTop="8px"/>
 	
-<Button android:text="Back" android:id="@+id/button_two" 
+<Button android:id="@+id/button_two" 
 	android:layout_gravity="center_horizontal|center" 
 	android:layout_height="fill_parent" 
 	android:layout_width="72dp" 
+	android:drawableTop="@drawable/iconprev"
+	android:paddingTop="16dp"
+	android:layout_marginTop="8px" android:enabled="false"/>
+
+<Button android:id="@+id/button_three" 
+	android:layout_gravity="center_horizontal|center" 
+	android:layout_height="fill_parent" 
+	android:layout_width="72dp" 
+	android:drawableTop="@drawable/iconnext"
+	android:paddingTop="16dp"
 	android:layout_marginTop="8px"/>
 
-<Button android:text="Next" android:id="@+id/button_three" 
+<Button android:id="@+id/button_four" 
 	android:layout_gravity="center_horizontal|center" 
 	android:layout_height="fill_parent" 
 	android:layout_width="72dp" 
-	android:layout_marginTop="8px"/>
-
-<Button android:text="Save" android:id="@+id/button_four" 
-	android:layout_gravity="center_horizontal|center" 
-	android:layout_height="fill_parent" 
-	android:layout_width="72dp" 
+	android:drawableTop="@drawable/iconsave"
+	android:paddingTop="16dp"
 	android:layout_marginTop="8px"/>
 
 </LinearLayout>
