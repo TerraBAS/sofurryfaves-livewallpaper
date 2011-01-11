@@ -29,6 +29,8 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
