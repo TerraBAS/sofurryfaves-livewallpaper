@@ -43,6 +43,7 @@ public class LiveWallpaperPainting extends Thread {
 
 	public static final int SCALINGMODE_FIT = 0;
 	public static final int SCALINGMODE_SCROLLING = 1;
+	public static final int SCALINGMODE_SCROLLING_FILLSCREEN = 2;
 	
 	/** Reference to the View and the context */
 	private SurfaceHolder surfaceHolder;
@@ -204,7 +205,7 @@ public class LiveWallpaperPainting extends Thread {
 					if (this.run)
 						updateImage();
 
-					if (oldImage != null && this.run && !skipTransition && scalingMode != SCALINGMODE_SCROLLING) {
+					if (oldImage != null && this.run && !skipTransition && scalingMode == SCALINGMODE_FIT) {
 						transitionImage();
 					}
 					skipTransition = false;
@@ -413,7 +414,7 @@ public class LiveWallpaperPainting extends Thread {
 	
 	
 	private Bitmap rescaleImage(Bitmap image) {
-		if (scalingMode == SCALINGMODE_SCROLLING)
+		if (scalingMode != SCALINGMODE_FIT)
 			return rescaleImageToVirtualScreen(image);
 		else
 			return rescaleImageToScreen(image);
@@ -430,7 +431,7 @@ public class LiveWallpaperPainting extends Thread {
 		if (imageAspect < canvasAspect) {
 			scaleFactor = (double) height / imageHeight;
 		} else {
-			scaleFactor = (double) width / imageWidth;
+			scaleFactor = (double) height / imageWidth;
 		}
 
 		float scaleWidth = ((float) scaleFactor) * imageWidth;
@@ -464,14 +465,14 @@ public class LiveWallpaperPainting extends Thread {
 
 		int virtualWidth;
 		int virtualHeight;
-		
+
 		if (numScreensX > 1)
-			virtualWidth = Math.abs(width * (numScreensX-1));
+			virtualWidth = Math.abs((int)(width * (numScreensX-(2.0/3.0))));
 		else
 			virtualWidth = Math.abs(width * numScreensX);
 			
 		if (numScreensY > 1)
-			virtualHeight = Math.abs(height * (numScreensY-1));
+			virtualHeight = Math.abs((int)(height * (numScreensY-(2.0/3.0))));
 		else
 			virtualHeight = Math.abs(height * numScreensY);
 
@@ -480,9 +481,15 @@ public class LiveWallpaperPainting extends Thread {
 		double scaleFactor;
 
 		if (imageAspect < canvasAspect) {
-			scaleFactor = (double) virtualHeight / imageHeight;
+			if (scalingMode == SCALINGMODE_SCROLLING)
+				scaleFactor = (double) virtualHeight / imageHeight;
+			else 
+				scaleFactor = (double) virtualWidth / imageWidth;
 		} else {
-			scaleFactor = (double) virtualWidth / imageWidth;
+			if (scalingMode == SCALINGMODE_SCROLLING)
+				scaleFactor = (double) virtualWidth / imageWidth;
+			else
+				scaleFactor = (double) virtualHeight / imageHeight;
 		}
 
 		float scaleWidth = ((float) scaleFactor) * imageWidth;
@@ -522,7 +529,7 @@ public class LiveWallpaperPainting extends Thread {
 			Log.d(sfapp, "drawing on canvas");
 			canvas.drawColor(Color.BLACK);
 			
-			if (scalingMode == SCALINGMODE_SCROLLING) {
+			if (scalingMode != SCALINGMODE_FIT) {
 				int virtualScreenWidth = Math.abs((numScreensX-1) * width);
 				int virtualScreenHeight= Math.abs((numScreensY-1) * height);
 				float shiftedScrollingOffsetX = scrollingOffsetX/3.0f*2.0f + ((1.0f-(1.0f/3.0f*2.0f)) / 2.0f);
