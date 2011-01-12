@@ -28,6 +28,7 @@ public class LiveWallpaperService extends WallpaperService {
 	public static final String PREFERENCE_SEARCH = "preference_search";
 	public static final String PREFERENCE_USERNAME = "preference_username";
 	public static final String PREFERENCE_PASSWORD = "preference_password";
+	public static final String PREFERENCE_WALLPAPERMODE = "preference_wallpapermode";
 
 	@Override
 	public Engine onCreateEngine() {
@@ -58,6 +59,7 @@ public class LiveWallpaperService extends WallpaperService {
 			prefs = LiveWallpaperService.this.getSharedPreferences(LiveWallpaperService.PREFERENCES, 0);
 			prefs.registerOnSharedPreferenceChangeListener(this);
 			painting = new LiveWallpaperPainting(holder, getApplicationContext(), 
+					Integer.parseInt(prefs.getString(PREFERENCE_WALLPAPERMODE, "0")),
 					Integer.parseInt(prefs.getString(PREFERENCE_ROTATETIME, "1800")),
 					Integer.parseInt(prefs.getString(PREFERENCE_CONTENTLEVEL, "0")),
 					Integer.parseInt(prefs.getString(PREFERENCE_CONTENTSOURCE, "1")),
@@ -67,6 +69,7 @@ public class LiveWallpaperService extends WallpaperService {
 		}
 
 		public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+			painting.setScalingMode(Integer.parseInt(prefs.getString(PREFERENCE_WALLPAPERMODE, "0")));
 			painting.setRotateInterval(Integer.parseInt(prefs.getString(PREFERENCE_ROTATETIME, "1800")));
 			painting.setContentLevel(Integer.parseInt(prefs.getString(PREFERENCE_CONTENTLEVEL, "0")));
 			painting.setContentSource(Integer.parseInt(prefs.getString(PREFERENCE_CONTENTSOURCE, "1")));
@@ -105,6 +108,7 @@ public class LiveWallpaperService extends WallpaperService {
 			} else {
 				int totalPages = painting.getTotalFavoritePages();
 				painting = new LiveWallpaperPainting(holder, getApplicationContext(), 
+						Integer.parseInt(prefs.getString(PREFERENCE_WALLPAPERMODE, "0")),
 						Integer.parseInt(prefs.getString(PREFERENCE_ROTATETIME, "1800")),
 						Integer.parseInt(prefs.getString(PREFERENCE_CONTENTLEVEL, "0")),
 						Integer.parseInt(prefs.getString(PREFERENCE_CONTENTSOURCE, "1")),
@@ -150,6 +154,34 @@ public class LiveWallpaperService extends WallpaperService {
 		@Override
 		public void onOffsetsChanged(float xOffset, float yOffset, 
 				float xStep, float yStep, int xPixels, int yPixels) {
+			Log.d("LW Service", "xOffset=" + xOffset +
+								" yOffset=" + yOffset +
+								" xStep=" + xStep +
+								" yStep=" + yStep +
+								" xPixels=" + xPixels +
+								" yPixels=" + yPixels);
+			
+			if (painting != null) {
+				int numScreensX;
+				if (xStep > 0.0)
+					numScreensX = (int)((1.0 / xStep) + 1.0);
+				else
+					numScreensX = 1;
+				int numScreensY;
+				if (yStep > 0.0)
+					numScreensY = (int)((1.0 / yStep) + 1.0);
+				else
+					numScreensY = 1;
+				painting.setNumScreensX(numScreensX);
+				painting.setNumScreensY(numScreensY);
+
+				painting.setScrollingOffsetX(xOffset);
+				painting.setScrollingOffsetY(yOffset);
+				painting.setSkipTransition(true);
+				if (painting.getScalingMode() != LiveWallpaperPainting.SCALINGMODE_FIT) {
+					painting.forceRepaint();
+				}
+			}
 		}
 
 		@Override

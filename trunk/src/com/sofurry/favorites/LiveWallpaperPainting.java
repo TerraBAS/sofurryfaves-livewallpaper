@@ -41,6 +41,9 @@ public class LiveWallpaperPainting extends Thread {
 
 	public static final int AJAXTYPE_APIERROR = 5;
 
+	public static final int SCALINGMODE_FIT = 0;
+	public static final int SCALINGMODE_SCROLLING = 1;
+	
 	/** Reference to the View and the context */
 	private SurfaceHolder surfaceHolder;
 	private Context context;
@@ -52,6 +55,7 @@ public class LiveWallpaperPainting extends Thread {
 	private int height;
 	private static int totalFavoritePages;
 	private int rotateInterval = 1800;
+	private int scalingMode = SCALINGMODE_FIT;
 	private static int contentLevel = 0;
 	private static int contentSource = 1;
 	private static String search = "";
@@ -74,10 +78,15 @@ public class LiveWallpaperPainting extends Thread {
 	private Bitmap hourglass;
 	private static LiveWallpaperPainting instance = null;
 
+	private int numScreensX = 1;
+	private int numScreensY = 1;
+	private float scrollingOffsetX = 0.0f;
+	private float scrollingOffsetY = 0.0f;
+	
 	/** Time tracking */
 	private long previousTime;
 
-	public LiveWallpaperPainting(SurfaceHolder surfaceHolder, Context context, int rotateInterval, int contentlevel,
+	public LiveWallpaperPainting(SurfaceHolder surfaceHolder, Context context, int scalingMode, int rotateInterval, int contentlevel,
 			int contentsource, String search, String username, String password) {
 		// keep a reference of the context and the surface
 		// the context is needed is you want to inflate
@@ -90,6 +99,7 @@ public class LiveWallpaperPainting extends Thread {
 		this.wait = true;
 		this.totalFavoritePages = 1;
 		this.contentLevel = contentlevel;
+		this.scalingMode = scalingMode;
 		this.contentSource = contentsource;
 		this.search = search;
 		this.username = username;
@@ -185,15 +195,16 @@ public class LiveWallpaperPainting extends Thread {
 					Log.d(sfapp, "Rendering loading text...");
 					Paint paint = new Paint();
 					paint.setAntiAlias(true);
-					c.drawBitmap(hourglass, 20, 70, paint);
-
+					if (!skipTransition) {
+						c.drawBitmap(hourglass, 20, 70, paint);
+					}
 					this.surfaceHolder.unlockCanvasAndPost(c);
 					errorMessage = null;
 					// Check if there's a new image
 					if (this.run)
 						updateImage();
 
-					if (oldImage != null && this.run && !skipTransition) {
+					if (oldImage != null && this.run && !skipTransition && scalingMode != SCALINGMODE_SCROLLING) {
 						transitionImage();
 					}
 					skipTransition = false;
@@ -272,15 +283,25 @@ public class LiveWallpaperPainting extends Thread {
 		synchronized (this.surfaceHolder) {
 			this.width = width;
 			this.height = height;
+			skipTransition = true;
 			xoffset = 0;
 			xoffsetold = 0;
 			yoffset = 0;
 			yoffsetold = 0;
-			skipTransition = true;
 		}
 		synchronized (this) {
 			if (currentImageBig != null)
 				currentImage = rescaleImage(currentImageBig);
+			notify();
+		}
+	}
+
+	public void forceRepaint() {
+		Log.d(sfapp, "ForceRepaint");
+		synchronized (this.surfaceHolder) {
+			skipTransition = true;
+		}
+		synchronized (this) {
 			notify();
 		}
 	}
@@ -307,38 +328,11 @@ public class LiveWallpaperPainting extends Thread {
 		        // Tell the media scanner about the new file so that it is
 		        // immediately available to the user.
 				MediaScannerNotifier notifier = new MediaScannerNotifier(instance.context, file, null);
-		        //MediaScannerConnection.scanFile(instance.context, new String[]{file}, null);
 			}
 		}
 	}
 	
 	
-//    public static void saveMediaEntry(String imagePath,String title,String description,long dateTaken,int orientation,Location loc) {
-//    	synchronized (instance) {
-//    		ContentValues v = new ContentValues();
-//    		v.put(Images.Media.TITLE, title);
-//    		v.put(Images.Media.DISPLAY_NAME, title);
-//    		v.put(Images.Media.DESCRIPTION, description);
-//    		v.put(Images.Media.DATE_ADDED, dateTaken);
-//    		v.put(Images.Media.DATE_TAKEN, dateTaken);
-//    		v.put(Images.Media.DATE_MODIFIED, dateTaken) ;
-//    		v.put(Images.Media.MIME_TYPE, "image/jpeg");
-//    		v.put(Images.Media.ORIENTATION, orientation);
-//    		File f = new File(imagePath) ;
-//    		File parent = f.getParentFile() ;
-//    		String path = parent.toString().toLowerCase() ;
-//    		String name = parent.getName().toLowerCase() ;
-//    		v.put(Images.ImageColumns.BUCKET_ID, path.hashCode());
-//    		v.put(Images.ImageColumns.BUCKET_DISPLAY_NAME, name);
-//    		v.put(Images.Media.SIZE,f.length()) ;
-//    		f = null ;
-//    		v.put("_data",imagePath) ;
-//    		ContentResolver c = instance.context.getContentResolver() ;
-//    		c.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
-//    	}
-//    }
-
-
 	public static void launchBrowser() {
 		synchronized (instance) {
 			if (instance.currentWallpaperEntry != null && instance.currentWallpaperEntry.getPageUrl() != null) {
@@ -419,6 +413,13 @@ public class LiveWallpaperPainting extends Thread {
 	
 	
 	private Bitmap rescaleImage(Bitmap image) {
+		if (scalingMode == SCALINGMODE_SCROLLING)
+			return rescaleImageToVirtualScreen(image);
+		else
+			return rescaleImageToScreen(image);
+	}
+	
+	private Bitmap rescaleImageToScreen(Bitmap image) {
 		int imageWidth = currentImageBig.getWidth();
 		int imageHeight = currentImageBig.getHeight();
 
@@ -457,11 +458,89 @@ public class LiveWallpaperPainting extends Thread {
 		return Bitmap.createScaledBitmap(image, (int) scaleWidth, (int) scaleHeight, true);
 	}
 
+	private Bitmap rescaleImageToVirtualScreen(Bitmap image) {
+		int imageWidth = currentImageBig.getWidth();
+		int imageHeight = currentImageBig.getHeight();
+
+		int virtualWidth;
+		int virtualHeight;
+		
+		if (numScreensX > 1)
+			virtualWidth = Math.abs(width * (numScreensX-1));
+		else
+			virtualWidth = Math.abs(width * numScreensX);
+			
+		if (numScreensY > 1)
+			virtualHeight = Math.abs(height * (numScreensY-1));
+		else
+			virtualHeight = Math.abs(height * numScreensY);
+
+		double imageAspect = (double) imageWidth / imageHeight;
+		double canvasAspect = (double) virtualWidth / virtualHeight;
+		double scaleFactor;
+
+		if (imageAspect < canvasAspect) {
+			scaleFactor = (double) virtualHeight / imageHeight;
+		} else {
+			scaleFactor = (double) virtualWidth / imageWidth;
+		}
+
+		float scaleWidth = ((float) scaleFactor) * imageWidth;
+		float scaleHeight = ((float) scaleFactor) * imageHeight;
+		Log.d(sfapp, "num Screens: " + numScreensX + "/" + numScreensY);
+		Log.d(sfapp, "virtual canvas size: " + virtualWidth + "/" + virtualHeight);
+		Log.d(sfapp, "virtual canvas aspect: " + canvasAspect);
+		Log.d(sfapp, "image dimensions: " + imageWidth + "/" + imageHeight);
+		Log.d(sfapp, "image aspect: " + imageAspect);
+		Log.d(sfapp, "scaleFactor: " + scaleFactor);
+		Log.d(sfapp, "Scaled dimensions: " + scaleWidth + "/" + scaleHeight);
+
+		xoffsetold = xoffset;
+		yoffsetold = yoffset;
+		oldImage = currentImage;
+
+		virtualWidth = Math.abs(width * numScreensX);
+		virtualHeight = Math.abs(height * numScreensY);
+
+		xoffset = (float) ((virtualWidth - scaleWidth) / 2.0);
+		yoffset = (float) ((virtualHeight - scaleHeight) / 2.0);
+
+		Log.d(sfapp, "Offset: " + xoffset + "/" + yoffset);
+
+		// create a matrix for the manipulation
+		Matrix matrix = new Matrix();
+		// resize the bit map
+		matrix.postScale(scaleWidth, scaleHeight);
+
+		// recreate the new Bitmap
+		return Bitmap.createScaledBitmap(image, (int) scaleWidth, (int) scaleHeight, true);
+	}
+
+	
 	private void repaintImage(Canvas canvas) {
 		if (currentImage != null) {
 			Log.d(sfapp, "drawing on canvas");
 			canvas.drawColor(Color.BLACK);
-			canvas.drawBitmap(currentImage, xoffset, yoffset, null);
+			
+			if (scalingMode == SCALINGMODE_SCROLLING) {
+				int virtualScreenWidth = Math.abs((numScreensX-1) * width);
+				int virtualScreenHeight= Math.abs((numScreensY-1) * height);
+				float shiftedScrollingOffsetX = scrollingOffsetX/3.0f*2.0f + ((1.0f-(1.0f/3.0f*2.0f)) / 2.0f);
+				float shiftedScrollingOffsetY = scrollingOffsetY/3.0f*2.0f + ((1.0f-(1.0f/3.0f*2.0f)) / 2.0f);
+			
+				if (numScreensX <= 1)
+					shiftedScrollingOffsetX = 0.0f;
+				if (numScreensY <= 1)
+					shiftedScrollingOffsetY = 0.0f;
+			
+				int xpos = -(int)((shiftedScrollingOffsetX) * virtualScreenWidth) + (int)xoffset;
+				int ypos = -(int)((shiftedScrollingOffsetY) * virtualScreenHeight) + (int)yoffset;
+				Log.d(sfapp, "DRAWING: virtualScreenWidth: "+virtualScreenWidth+" scrollingOffsetX:"+scrollingOffsetX+" xoffset:"+xoffset+" x="+xpos);
+				Log.d(sfapp, "DRAWING: virtualScreenHeight: "+virtualScreenHeight+" scrollingOffsetY:"+scrollingOffsetY+" yoffset:"+yoffset+" y="+ypos);
+				canvas.drawBitmap(currentImage, xpos, ypos, null);
+			} else {
+				canvas.drawBitmap(currentImage, xoffset, yoffset, null);
+			}
 			Log.d(sfapp, "drawing done");
 		}
 	}
@@ -654,4 +733,42 @@ public class LiveWallpaperPainting extends Thread {
 		
 	}
 
+	public void setScalingMode(int mode) {
+		this.scalingMode = mode;
+	}
+	
+	public int getScalingMode() {
+		return this.scalingMode;
+	}
+
+	public void setNumScreensX(int numScreensX) {
+		this.numScreensX = numScreensX;
+	}
+
+	public void setNumScreensY(int numScreensY) {
+		this.numScreensY = numScreensY;
+	}
+
+	public void setScrollingOffsetX(float scrollingOffsetX) {
+		this.scrollingOffsetX = scrollingOffsetX;
+	}
+
+	public void setScrollingOffsetY(float scrollingOffsetY) {
+		this.scrollingOffsetY = scrollingOffsetY;
+	}
+
+	public void setSkipTransition(boolean skipTransition) {
+		this.skipTransition = skipTransition;
+	}
+
+	public int getWidth() {
+		return width;
+	}
+
+	public int getHeight() {
+		return height;
+	}
+
+	
+	
 }

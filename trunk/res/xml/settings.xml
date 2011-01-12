@@ -26,6 +26,13 @@
             android:entries="@array/rotatetime_names"
             android:entryValues="@array/rotatetime_values" />
 
+    <ListPreference
+            android:key="preference_wallpapermode"
+            android:title="@string/preference_wallpapermode_title"
+            android:summary="@string/preference_wallpapermode_summary"
+            android:entries="@array/wallpapermode_names"
+            android:entryValues="@array/wallpapermode_values" />
+
     <!--ListPreference
             android:key="preference_contentlevel"
             android:title="@string/preference_contentlevel_title"
