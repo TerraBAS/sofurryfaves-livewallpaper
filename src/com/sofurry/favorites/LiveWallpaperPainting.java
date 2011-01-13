@@ -169,63 +169,65 @@ public class LiveWallpaperPainting extends Thread {
 
 				Log.d(sfapp, "locking canvas 1");
 				c = this.surfaceHolder.lockCanvas(null);
-				Log.i(sfapp, "Width:" + width + " Height:" + height + " CWidth:" + c.getWidth() + " CHeight:"
+				if (c != null) {
+					Log.i(sfapp, "Width:" + width + " Height:" + height + " CWidth:" + c.getWidth() + " CHeight:"
 						+ c.getHeight());
-				if (width == 0)
-					width = c.getWidth();
-				if (height == 0)
-					height = c.getWidth();
-				synchronized (this.surfaceHolder) {
-
-					if (currentImage == null) {
-						currentImage = Bitmap.createBitmap(c.getWidth(), c.getHeight(), Bitmap.Config.RGB_565);
-						Canvas ci = new Canvas();
-						ci.setBitmap(currentImage);
-
-						Paint paint = new Paint();
-						paint.setStyle(Paint.Style.STROKE);
-						paint.setColor(Color.YELLOW);
-						paint.setAntiAlias(true);
-						paint.setTextSize(20);
-						ci.drawText("Install the SoFurry", 50, c.getHeight() / 2, paint);
-						ci.drawText("widget to control the", 50, c.getHeight() / 2 + 25, paint);
-						ci.drawText("live wallpaper", 50, c.getHeight() / 2 + 50, paint);
-					}
-
-					repaintImage(c);
-					Log.d(sfapp, "Rendering loading text...");
-					Paint paint = new Paint();
-					paint.setAntiAlias(true);
-					if (!skipTransition) {
-						c.drawBitmap(hourglass, 20, 70, paint);
-					}
-					this.surfaceHolder.unlockCanvasAndPost(c);
-					errorMessage = null;
-					// Check if there's a new image
-					if (this.run)
-						updateImage();
-
-					if (oldImage != null && this.run && !skipTransition && scalingMode == SCALINGMODE_FIT) {
-						transitionImage();
-					}
-					skipTransition = false;
-
-					Log.d(sfapp, "locking canvas 2");
-					c = this.surfaceHolder.lockCanvas(null);
-					Log.d(sfapp, "Drawing...");
-					if (this.run)
+					if (width == 0)
+						width = c.getWidth();
+					if (height == 0)
+						height = c.getWidth();
+					synchronized (this.surfaceHolder) {
+						
+						if (currentImage == null) {
+							currentImage = Bitmap.createBitmap(c.getWidth(), c.getHeight(), Bitmap.Config.RGB_565);
+							Canvas ci = new Canvas();
+							ci.setBitmap(currentImage);
+							
+							Paint paint = new Paint();
+							paint.setStyle(Paint.Style.STROKE);
+							paint.setColor(Color.YELLOW);
+							paint.setAntiAlias(true);
+							paint.setTextSize(20);
+							ci.drawText("Install the SoFurry", 50, c.getHeight() / 2, paint);
+							ci.drawText("widget to control the", 50, c.getHeight() / 2 + 25, paint);
+							ci.drawText("live wallpaper", 50, c.getHeight() / 2 + 50, paint);
+						}
+						
 						repaintImage(c);
-
-					if (errorMessage != null) {
-						paint = new Paint();
-						paint.setColor(Color.RED);
+						Log.d(sfapp, "Rendering loading text...");
+						Paint paint = new Paint();
 						paint.setAntiAlias(true);
-						paint.setTextSize(35);
-						c.drawText(errorMessage, 22, 212, paint);
-						paint.setColor(Color.YELLOW);
-						c.drawText(errorMessage, 20, 210, paint);
+						if (!skipTransition) {
+							c.drawBitmap(hourglass, 20, 70, paint);
+						}
+						this.surfaceHolder.unlockCanvasAndPost(c);
+						errorMessage = null;
+						// 	Check if there's a new image
+						if (this.run)
+							updateImage();
+
+						if (oldImage != null && this.run && !skipTransition && scalingMode == SCALINGMODE_FIT) {
+							transitionImage();
+						}
+						skipTransition = false;
+						
+						Log.d(sfapp, "locking canvas 2");
+						c = this.surfaceHolder.lockCanvas(null);
+						Log.d(sfapp, "Drawing...");
+						if (this.run)
+							repaintImage(c);
+						
+						if (errorMessage != null) {
+							paint = new Paint();
+							paint.setColor(Color.RED);
+							paint.setAntiAlias(true);
+							paint.setTextSize(35);
+							c.drawText(errorMessage, 22, 212, paint);
+							paint.setColor(Color.YELLOW);
+							c.drawText(errorMessage, 20, 210, paint);
+						}
+						oldImage = null;
 					}
-					oldImage = null;
 				}
 			} finally {
 				try {

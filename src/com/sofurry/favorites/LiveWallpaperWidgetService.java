@@ -25,6 +25,9 @@ public class LiveWallpaperWidgetService extends Service {
 
 	@Override
 	public void onStart(Intent intent, int startId) {
+		if (intent == null)
+			return;
+		
 		String command = intent.getAction();
 		int appWidgetId = intent.getExtras().getInt(
 				AppWidgetManager.EXTRA_APPWIDGET_ID);
