@@ -164,12 +164,14 @@ public class LiveWallpaperService extends WallpaperService {
 			if (painting != null) {
 				int numScreensX;
 				if (xStep > 0.0)
-					numScreensX = (int)((1.0 / xStep) + 1.0);
+//					numScreensX = (int)((1.0 / xStep) + 1.0);
+					numScreensX = 2;
 				else
 					numScreensX = 1;
 				int numScreensY;
 				if (yStep > 0.0)
-					numScreensY = (int)((1.0 / yStep) + 1.0);
+//					numScreensY = (int)((1.0 / yStep) + 1.0);
+					numScreensY = 2;
 				else
 					numScreensY = 1;
 				painting.setNumScreensX(numScreensX);
