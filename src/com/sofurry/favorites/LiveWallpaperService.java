@@ -29,6 +29,7 @@ public class LiveWallpaperService extends WallpaperService {
 	public static final String PREFERENCE_USERNAME = "preference_username";
 	public static final String PREFERENCE_PASSWORD = "preference_password";
 	public static final String PREFERENCE_WALLPAPERMODE = "preference_wallpapermode";
+	public static final String PREFERENCE_IMAGESIZE = "preference_imagesize";
 
 	@Override
 	public Engine onCreateEngine() {
@@ -59,6 +60,7 @@ public class LiveWallpaperService extends WallpaperService {
 			prefs = LiveWallpaperService.this.getSharedPreferences(LiveWallpaperService.PREFERENCES, 0);
 			prefs.registerOnSharedPreferenceChangeListener(this);
 			painting = new LiveWallpaperPainting(holder, getApplicationContext(), 
+					Integer.parseInt(prefs.getString(PREFERENCE_IMAGESIZE, "0")),
 					Integer.parseInt(prefs.getString(PREFERENCE_WALLPAPERMODE, "0")),
 					Integer.parseInt(prefs.getString(PREFERENCE_ROTATETIME, "1800")),
 					Integer.parseInt(prefs.getString(PREFERENCE_CONTENTLEVEL, "0")),
@@ -69,6 +71,7 @@ public class LiveWallpaperService extends WallpaperService {
 		}
 
 		public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+			painting.setScalingMode(Integer.parseInt(prefs.getString(PREFERENCE_IMAGESIZE, "0")));
 			painting.setScalingMode(Integer.parseInt(prefs.getString(PREFERENCE_WALLPAPERMODE, "0")));
 			painting.setRotateInterval(Integer.parseInt(prefs.getString(PREFERENCE_ROTATETIME, "1800")));
 			painting.setContentLevel(Integer.parseInt(prefs.getString(PREFERENCE_CONTENTLEVEL, "0")));
@@ -108,6 +111,7 @@ public class LiveWallpaperService extends WallpaperService {
 			} else {
 				int totalPages = painting.getTotalFavoritePages();
 				painting = new LiveWallpaperPainting(holder, getApplicationContext(), 
+						Integer.parseInt(prefs.getString(PREFERENCE_IMAGESIZE, "0")),
 						Integer.parseInt(prefs.getString(PREFERENCE_WALLPAPERMODE, "0")),
 						Integer.parseInt(prefs.getString(PREFERENCE_ROTATETIME, "1800")),
 						Integer.parseInt(prefs.getString(PREFERENCE_CONTENTLEVEL, "0")),

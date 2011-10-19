@@ -3,6 +3,8 @@
     <string name="app_name">SoFurry Favs LiveWallpaper</string>
     <string name="settings_title">SoFurry LiveWallpaper settings</string>
     <string name="description">Your SoFurry favorites as rotating wallpaper!</string>
+    <string name="preference_imagesize_title">Image Size</string>
+    <string name="preference_imagesize_summary">Enables high-res image downloads for tablets</string>
     <string name="preference_wallpapermode_title">Scaling Mode</string>
     <string name="preference_wallpapermode_summary">Choose how the live wallpaper is scaled on the screen</string>
     <string name="preference_rotatetime_title">Change Interval</string>

@@ -58,6 +58,7 @@ public class LiveWallpaperPainting extends Thread {
 	private int rotateInterval = 1800;
 	private int scalingMode = SCALINGMODE_FIT;
 	private static int contentLevel = 0;
+	private static int imageSizeSetting = 0;
 	private static int contentSource = 1;
 	private static String search = "";
 	private static String username = "";
@@ -87,7 +88,7 @@ public class LiveWallpaperPainting extends Thread {
 	/** Time tracking */
 	private long previousTime;
 
-	public LiveWallpaperPainting(SurfaceHolder surfaceHolder, Context context, int scalingMode, int rotateInterval, int contentlevel,
+	public LiveWallpaperPainting(SurfaceHolder surfaceHolder, Context context, int imageSizeSetting, int scalingMode, int rotateInterval, int contentlevel,
 			int contentsource, String search, String username, String password) {
 		// keep a reference of the context and the surface
 		// the context is needed is you want to inflate
@@ -106,6 +107,7 @@ public class LiveWallpaperPainting extends Thread {
 		this.username = username;
 		this.password = password;
 		this.rotateInterval = rotateInterval;
+		LiveWallpaperPainting.imageSizeSetting = imageSizeSetting;
 		this.lastTouchTime = 0;
 		this.lastLastTouchTime = 0;
 		Log.i(sfapp, "LiveWallpaperPainting constructor called");
@@ -645,7 +647,11 @@ public class LiveWallpaperPainting extends Thread {
 				entry.setId(Integer.parseInt(jsonItem.getString("pid")));
 				entry.setName(jsonItem.getString("name"));
 				entry.setPageUrl("http://www.sofurry.com/page/" + jsonItem.getString("pid"));
-				entry.setImageUrl(thumb.replace("/thumbnails/", "/preview/"));
+				if (LiveWallpaperPainting.imageSizeSetting == 0)
+					entry.setImageUrl("http://beta.sofurry.com/std/preview?page="+entry.getId());
+				else
+					entry.setImageUrl("http://beta.sofurry.com/std/content?page="+entry.getId());
+				
 				return entry;
 			}
 
