@@ -33,12 +33,19 @@
             android:entries="@array/wallpapermode_names"
             android:entryValues="@array/wallpapermode_values" />
 
-    <!--ListPreference
+    <ListPreference
+            android:key="preference_imagesize"
+            android:title="@string/preference_imagesize_title"
+            android:summary="@string/preference_imagesize_summary"
+            android:entries="@array/imagesize_names"
+            android:entryValues="@array/imagesize_values" />
+
+	<ListPreference
             android:key="preference_contentlevel"
             android:title="@string/preference_contentlevel_title"
             android:summary="@string/preference_contentlevel_summary"
             android:entries="@array/contentlevel_names"
-            android:entryValues="@array/contentlevel_values" /-->
+            android:entryValues="@array/contentlevel_values" />
 
     <ListPreference
             android:key="preference_contentsource"
