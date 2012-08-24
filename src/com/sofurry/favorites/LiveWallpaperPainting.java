@@ -648,9 +648,9 @@ public class LiveWallpaperPainting extends Thread {
 				entry.setName(jsonItem.getString("name"));
 				entry.setPageUrl("http://www.sofurry.com/page/" + jsonItem.getString("pid"));
 				if (LiveWallpaperPainting.imageSizeSetting == 0)
-					entry.setImageUrl("http://beta.sofurry.com/std/preview?page="+entry.getId());
+					entry.setImageUrl("http://www.sofurry.com/std/preview?page="+entry.getId());
 				else
-					entry.setImageUrl("http://beta.sofurry.com/std/content?page="+entry.getId());
+					entry.setImageUrl("http://www.sofurry.com/std/content?page="+entry.getId());
 				
 				return entry;
 			}
